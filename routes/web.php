@@ -6,6 +6,7 @@ use App\Http\Controllers\BerandaController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\PetaLayananController;
 use App\Http\Controllers\ItemClaimController;
+use App\Http\Controllers\LaporanSayaController;
 
 // ==========================================================
 // 1. RUTE PUBLIK (BISA DILIHAT OLEH UMUM / TANPA LOGIN)
@@ -70,15 +71,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/lapor-barang-hilang/simpan', [ReportController::class, 'storeBarang'])
         ->name('laporan.barang.store');
 
-    // ==========================================
-    // HALAMAN LAPORAN SAYA (BARANG)
-    // ==========================================
-    Route::get('/lapor-barang-hilang/saya', [ReportController::class, 'sayaBarang'])
-        ->name('laporan.barang.saya');
-    Route::get('/lapor-barang-hilang/saya/{report_id}', [ReportController::class, 'detailLaporanSayaBarang'])
-        ->name('laporan.barang.saya.detail');
-    Route::delete('/lapor-barang-hilang/saya/{report_id}', [ReportController::class, 'hapusLaporanBarang'])
-        ->name('laporan.barang.saya.hapus');
+
+
 
     // ==========================================
     // RUTE KLAIM BARANG TEMUAN
@@ -98,18 +92,18 @@ Route::middleware('auth')->group(function () {
     Route::get('/lapor-barang-hilang/aktivitas-klaim/{claim_id}/simulasi', [ItemClaimController::class, 'simulasiNextStep'])
         ->name('barang.klaim.simulasi');
     // Action Verifikasi Scan QR Serah Terima Selesai (Step 5 -> Step 6)
-    Route::get('/lapor-barang-hilang/aktivitas-klaim/{claim_id}/konfirmasi-serah-terima', [ItemClaimController::class, 'konfirmasiSerahTerima'])
+    Route::get('/lapor-barang-hilang/aktivitas-klaim/{claim}/konfirmasi-serah-terima', [ItemClaimController::class, 'konfirmasi'])
         ->name('barang.klaim.konfirmasi');
+});
 
-    // ==========================================
-    // TANGGAPAN DETAIL (Review klaim dari sisi pelapor)
-    // ==========================================
-    Route::get('/lapor-barang-hilang/tanggapan/{claim_id}', [ItemClaimController::class, 'tanggapanDetail'])
-        ->name('barang.tanggapan.detail');
-    Route::post('/lapor-barang-hilang/tanggapan/{claim_id}/verifikasi', [ItemClaimController::class, 'verifikasiTanggapan'])
-        ->name('barang.tanggapan.verifikasi');
-    Route::post('/lapor-barang-hilang/tanggapan/{claim_id}/tolak', [ItemClaimController::class, 'tolakTanggapan'])
-        ->name('barang.tanggapan.tolak');
+Route::middleware('auth')->prefix('laporan-barang/saya')->group(function () {
+    Route::get('/', [LaporanSayaController::class, 'index'])->name('laporan.barang.saya');
+    Route::get('/{report}', [LaporanSayaController::class, 'show'])->name('laporan.barang.saya.show');
+    Route::delete('/{report}', [LaporanSayaController::class, 'destroy'])->name('laporan.barang.saya.destroy');
+    Route::get('/{report}/tanggapan/{claim}', [LaporanSayaController::class, 'tanggapan'])->name('laporan.barang.tanggapan');
+    Route::post('/{report}/tanggapan/{claim}/verifikasi', [LaporanSayaController::class, 'verifikasi'])->name('laporan.barang.tanggapan.verifikasi');
+    Route::post('/{report}/tanggapan/{claim}/tolak', [LaporanSayaController::class, 'tolak'])->name('laporan.barang.tanggapan.tolak');
+    Route::post('/notifikasi/{claim}/baca', [LaporanSayaController::class, 'baca'])->name('notifikasi.baca');
 });
 
 require __DIR__ . '/auth.php';

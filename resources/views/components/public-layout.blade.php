@@ -61,44 +61,7 @@
                 <div class="flex items-center gap-4 sm:gap-5">
 
                     {{-- 1. ICON LONCENG NOTIFIKASI --}}
-                    <div class="relative" x-data="{ notifOpen: false }">
-                        <button type="button"
-                            @click="notifOpen = !notifOpen"
-                            class="relative p-1.5 text-slate-700 transition-colors hover:text-blue-600 focus:outline-none">
-                            {{-- SVG Bell Icon --}}
-                            <svg class="h-6 w-6 stroke-[2.2]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                            </svg>
-
-                            {{-- Titik Pendar Notifikasi Baru --}}
-                            <span class="absolute top-1 right-1 flex h-2.5 w-2.5">
-                                <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75"></span>
-                                <span class="relative inline-flex h-2.5 w-2.5 rounded-full bg-blue-600"></span>
-                            </span>
-                        </button>
-
-                        {{-- DROPDOWN NOTIFIKASI --}}
-                        <div x-show="notifOpen"
-                            @click.outside="notifOpen = false"
-                            x-cloak
-                            x-transition
-                            class="absolute right-0 z-50 mt-3 w-80 rounded-2xl border border-slate-100 bg-white p-4 shadow-2xl">
-                            <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
-                                <span class="text-xs font-bold uppercase tracking-wider text-[#0c203b]">Notifikasi</span>
-                                <span class="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-600">1 Baru</span>
-                            </div>
-                            <div class="py-3">
-                                <div class="flex gap-3 text-xs">
-                                    <span class="mt-1 h-2 w-2 shrink-0 rounded-full bg-blue-600"></span>
-                                    <div>
-                                        <p class="font-bold text-[#0c203b]">Selamat Datang di LaporKita!</p>
-                                        <p class="mt-0.5 text-[11px] leading-relaxed text-slate-500">Akun Anda telah aktif. Laporkan fasilitas rusak atau barang temuan di sekitar Anda.</p>
-                                        <span class="mt-1.5 block text-[10px] text-slate-400">Baru saja</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <x-notification-bell />
 
                     {{-- 2. FOTO PROFIL BUNDAR + ARROW DOWN --}}
                     <div class="relative" x-data="{ profileOpen: false }">

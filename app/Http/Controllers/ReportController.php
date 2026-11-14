@@ -278,7 +278,6 @@ class ReportController extends Controller
         }
 
         $report = Report::create([
-            'ticket_code'    => '#BH' . date('ymd') . rand(100, 999),
             'user_id'        => Auth::id(),
             'category_id'    => $validated['category_id'],
             'type'           => 'barang_hilang',
@@ -296,7 +295,7 @@ class ReportController extends Controller
             'status'         => 'verified', // langsung tayang di feed publik
         ]);
 
-        return redirect()->route('laporan.barang.index')
-            ->with('success', 'Laporan barang berhasil diterbitkan ke publik & radar peta!');
+        return redirect()->route('laporan.barang.saya')
+    ->with('success', 'Laporan barang berhasil diterbitkan!');
     }
 }

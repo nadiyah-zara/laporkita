@@ -25,6 +25,13 @@
                 </h1>
             </div>
 
+            {{-- BANNER DITOLAK (tambahkan di sini) --}}
+            @if ($claim->rejected_at)
+            <div class="mb-6 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-xs font-bold text-rose-700">
+                Klaim Anda ditolak oleh penemu. {{ $claim->rejection_reason }}
+            </div>
+            @endif
+
             {{-- KARTU UTAMA STEPPER AKTIVITAS --}}
             <div class="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm sm:p-10">
 
@@ -68,7 +75,7 @@
                     {{-- ======================================================= --}}
                     {{-- TAMPILAN JIKA STEP 2: BELUM DIVERIFIKASI (SESUAI FOTO 2) --}}
                     {{-- ======================================================= --}}
-                    @if ($claim->current_step == 2)
+                    @if ($claim->current_step == 2 && !$claim->rejected_at)
                     <div class="space-y-4">
                         <div class="flex items-center gap-3">
                             <span class="flex h-6 w-6 items-center justify-center rounded-lg bg-blue-50 text-xs font-bold text-blue-600">3</span>
@@ -88,7 +95,7 @@
                     {{-- ======================================================= --}}
                     {{-- TAMPILAN JIKA STEP 3: DIVERIFIKASI (SESUAI FOTO 3)        --}}
                     {{-- ======================================================= --}}
-                    @if ($claim->current_step == 3)
+                    @if ($claim->current_step == 3 && !$claim->rejected_at)
                     <div class="space-y-6">
                         <div class="flex items-center gap-3">
                             <span class="flex h-6 w-6 items-center justify-center rounded-lg bg-blue-50 text-xs font-bold text-blue-600">4</span>
@@ -117,7 +124,7 @@
                     {{-- ======================================================= --}}
                     {{-- TAMPILAN JIKA STEP 4: FORM KESEPAKATAN COD (SESUAI FOTO 4) --}}
                     {{-- ======================================================= --}}
-                    @if ($claim->current_step == 4)
+                    @if ($claim->current_step == 4 && !$claim->rejected_at)
                     <div class="space-y-6">
                         <div class="flex items-center gap-3">
                             <span class="flex h-6 w-6 items-center justify-center rounded-lg bg-blue-50 text-xs font-bold text-blue-600">4</span>
@@ -168,7 +175,7 @@
                     {{-- ======================================================= --}}
                     {{-- TAMPILAN JIKA STEP 5: QR TIKET PENGAMBILAN (SESUAI FOTO 5) --}}
                     {{-- ======================================================= --}}
-                    @if ($claim->current_step >= 5)
+                    @if ($claim->current_step >= 5 && !$claim->rejected_at)
                     <div class="space-y-6">
                         <div class="flex items-center gap-3">
                             <span class="flex h-6 w-6 items-center justify-center rounded-lg bg-blue-50 text-xs font-bold text-blue-600">5</span>
@@ -282,7 +289,7 @@
                     {{-- ======================================================= --}}
                     {{-- TAMPILAN JIKA STEP 6: SELESAI --}}
                     {{-- ======================================================= --}}
-                    @if ($claim->current_step >= 6)
+                    @if ($claim->current_step >= 6 && !$claim->rejected_at)
                     <div class="mt-8 rounded-3xl border border-emerald-100 bg-emerald-50/50 p-8 text-center shadow-sm">
                         <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 shadow-sm">
                             <svg class="h-8 w-8" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">

@@ -6,6 +6,7 @@ use App\Models\ItemClaim;
 use App\Models\Report;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class ItemClaimController extends Controller
 {
@@ -26,6 +27,7 @@ class ItemClaimController extends Controller
         }
 
         return view('barang.klaim-form', compact('report'));
+        abort_if($report->user_id === Auth::id(), 403, 'Anda tidak bisa mengklaim laporan sendiri.');
     }
 
     /**
@@ -141,77 +143,31 @@ class ItemClaimController extends Controller
     /**
      * Verifikasi Serah Terima Selesai (Hasil Scan QR Penemu) -> Step 6: Selesai
      */
-    public function konfirmasiSerahTerima($claimId)
+    public function konfirmasi(ItemClaim $claim)
     {
-        $claim = ItemClaim::with('report')->findOrFail($claimId);
+        $claim->load('report');
+        $isReporter = $claim->report->user_id === auth()->id();
 
-        $claim->update([
-            'current_step' => 6,
-            'status'       => 'completed',
-        ]);
+        // Di mode local, pengklaim boleh klik tombol simulasi untuk demo.
+        abort_unless($isReporter || app()->environment('local'), 403);
 
-        $claim->report->update([
-            'status' => 'resolved',
-        ]);
+        if ($claim->current_step == 5 && !$claim->rejected_at) {
+            DB::transaction(function () use ($claim) {
+                $claim->forceFill(['current_step' => 6])->save();
+                $claim->report->forceFill(['status' => 'resolved'])->save();
 
-        return redirect()->route('barang.klaim.aktivitas', $claim->id)
-            ->with('success', 'Luar biasa! Serah terima barang berhasil diverifikasi. Laporan kini resmi SELESAI!');
-    }
-
-    /**
-     * TANGGAPAN DETAIL: Halaman review klaim dari sisi PELAPOR (orang yang menemukan/kehilangan)
-     * Pelapor bisa melihat detail klaim dan memverifikasi/menolak
-     */
-    public function tanggapanDetail($claimId)
-    {
-        $claim = ItemClaim::with(['report', 'user'])->findOrFail($claimId);
-
-        // Pastikan yang melihat adalah pemilik laporan ATAU pemilik klaim
-        if ($claim->report->user_id !== Auth::id() && $claim->user_id !== Auth::id()) {
-            abort(403, 'Akses tidak diizinkan.');
+                // Tanggapan lain otomatis ditutup
+                ItemClaim::where('report_id', $claim->report_id)
+                    ->where('id', '!=', $claim->id)
+                    ->whereNull('rejected_at')
+                    ->update(['rejected_at' => now(), 'rejection_reason' => 'Barang sudah dikembalikan ke pemilik lain.']);
+            });
         }
 
-        return view('barang.tanggapan-detail', compact('claim'));
+        return $isReporter
+            ? redirect()->route('laporan.barang.tanggapan', [$claim->report_id, $claim->id])->with('success', 'Serah terima selesai!')
+            : redirect()->route('barang.klaim.aktivitas', $claim); // <-- CEK
     }
 
-    /**
-     * VERIFIKASI TANGGAPAN: Pelapor menerima klaim -> step maju ke 3 (verified)
-     */
-    public function verifikasiTanggapan($claimId)
-    {
-        $claim = ItemClaim::with('report')->findOrFail($claimId);
-
-        // Hanya pemilik laporan yang bisa verifikasi
-        if ($claim->report->user_id !== Auth::id()) {
-            abort(403, 'Akses tidak diizinkan.');
-        }
-
-        $claim->update([
-            'current_step' => 3,
-            'status'       => 'verified',
-        ]);
-
-        return redirect()->route('laporan.barang.saya.detail', $claim->report_id)
-            ->with('success', 'Tanggapan berhasil diverifikasi! Pengklaim bisa lanjut ke tahap kesepakatan.');
-    }
-
-    /**
-     * TOLAK TANGGAPAN: Pelapor menolak klaim
-     */
-    public function tolakTanggapan($claimId)
-    {
-        $claim = ItemClaim::with('report')->findOrFail($claimId);
-
-        // Hanya pemilik laporan yang bisa menolak
-        if ($claim->report->user_id !== Auth::id()) {
-            abort(403, 'Akses tidak diizinkan.');
-        }
-
-        $claim->update([
-            'status' => 'rejected',
-        ]);
-
-        return redirect()->route('laporan.barang.saya.detail', $claim->report_id)
-            ->with('success', 'Tanggapan telah ditolak.');
-    }
+    
 }

@@ -38,4 +38,13 @@ class ItemClaim extends Model
     {
         return $this->belongsTo(User::class, 'user_id');
     }
+    /** Label status dari sudut pandang penemu (pemilik laporan). */
+    public function getReporterLabelAttribute(): array
+    {
+        if ($this->rejected_at)         return ['Ditolak', 'bg-rose-50 text-rose-600'];
+        if ($this->current_step >= 6)   return ['Selesai', 'bg-emerald-100 text-emerald-700'];
+        if ($this->current_step >= 3)   return ['Diverifikasi', 'bg-emerald-50 text-emerald-600'];
+        if ($this->reporter_seen_at)    return ['Sudah Diperiksa', 'bg-amber-50 text-amber-600'];
+        return ['Baru', 'bg-blue-50 text-blue-600'];
+    }
 }

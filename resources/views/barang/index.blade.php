@@ -51,7 +51,7 @@
             {{-- TOMBOL MENUJU LAPORAN ANDA (HANYA MUNCUL JIKA SUDAH LOGIN) --}}
             @auth
             <div class="mb-6 flex justify-end">
-                <a href="{{ route('laporan.infrastruktur.saya') }}" class="inline-flex items-center gap-2 rounded-xl bg-[#0066FF] px-6 py-2.5 text-sm font-bold text-white shadow-md hover:bg-blue-700">
+                <a href="{{ route('laporan.barang.saya') }}" class="inline-flex items-center gap-2 rounded-xl bg-[#0066FF] px-6 py-2.5 text-sm font-bold text-white shadow-md hover:bg-blue-700">
                     Halaman Laporan Anda
                     <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
@@ -208,15 +208,16 @@
                             {{-- Jika belum selesai & jenisnya penemuan: Tampilkan tombol klaim --}}
                             @if ($report->item_kind == 'penemuan')
                             @auth
+                            @if ($report->user_id !== auth()->id())
                             <a href="{{ route('barang.klaim.create', $report->id) }}"
                                 class="rounded-xl bg-[#0c203b] px-5 py-2 text-xs font-bold text-white hover:bg-slate-800 transition-all">
                                 Klaim Temuan
                             </a>
                             @else
-                            <button type="button" @click="modal = 'login'"
-                                class="rounded-xl bg-[#0c203b] px-5 py-2 text-xs font-bold text-white hover:bg-slate-800 transition-all">
-                                Klaim Temuan
-                            </button>
+                            <a href="{{ route('laporan.barang.saya.show', $report) }}" class="rounded-xl bg-slate-100 px-5 py-2 text-xs font-bold text-slate-600">
+                                Lihat Tanggapan
+                            </a>
+                            @endif
                             @endauth
                             @endif
                             @endif

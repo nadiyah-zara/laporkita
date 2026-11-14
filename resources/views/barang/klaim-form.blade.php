@@ -108,7 +108,7 @@
              this.fileName = '';
              this.fileSize = '';
              this.isPdf = false;
-             $refs.proofInput.value = '';
+             this.$refs.proofInput.value = '';
          }
      }">
                         <div class="flex items-center gap-3">
