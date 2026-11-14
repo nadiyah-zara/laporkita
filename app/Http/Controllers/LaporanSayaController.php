@@ -17,9 +17,9 @@ class LaporanSayaController extends Controller
         $tab = $request->query('tab', 'semua');
 
         $milik = Report::barang()->where('user_id', $uid)
-            ->withCount(['claims as klaim_baru' => fn ($q) => $q->whereNull('reporter_seen_at')->whereNull('rejected_at')])
+            ->withCount(['claims as klaim_baru' => fn($q) => $q->whereNull('reporter_seen_at')->whereNull('rejected_at')])
             ->get()
-            ->map(fn ($r) => [
+            ->map(fn($r) => [
                 'jenis' => 'milik',
                 'kode' => $r->ticket_code,
                 'judul' => $r->title,
@@ -31,8 +31,8 @@ class LaporanSayaController extends Controller
             ]);
 
         $menanggapi = ItemClaim::with('report')->where('user_id', $uid)->get()
-            ->filter(fn ($c) => $c->report)
-            ->map(fn ($c) => [
+            ->filter(fn($c) => $c->report)
+            ->map(fn($c) => [
                 'jenis' => 'menanggapi',
                 'kode' => $c->report->ticket_code,
                 'judul' => $c->report->title,
@@ -46,10 +46,10 @@ class LaporanSayaController extends Controller
         $items = $milik->concat($menanggapi);
 
         if ($search = trim((string) $request->query('search'))) {
-            $items = $items->filter(fn ($i) => stripos($i['judul'] . ' ' . $i['kode'], $search) !== false);
+            $items = $items->filter(fn($i) => stripos($i['judul'] . ' ' . $i['kode'], $search) !== false);
         }
         if ($cat = $request->query('category_id')) {
-            $items = $items->filter(fn ($i) => (string) $i['category_id'] === (string) $cat);
+            $items = $items->filter(fn($i) => (string) $i['category_id'] === (string) $cat);
         }
 
         $counts = [
@@ -79,7 +79,7 @@ class LaporanSayaController extends Controller
         $this->authorizeOwner($report);
 
         $claims = $report->claims()->with('user')->oldest()->get();
-        $claims->each(fn ($c, $i) => $c->nomor = $i + 1);
+        $claims->each(fn($c, $i) => $c->nomor = $i + 1);
 
         return view('barang.saya-detail', [
             'report' => $report,
@@ -99,7 +99,8 @@ class LaporanSayaController extends Controller
         $nomor = $report->claims()->where('id', '<=', $claim->id)->count();
         $claim->load('user');
 
-        return view('barang.tanggapan', compact('report', 'claim', 'nomor'));
+        $view = $report->item_kind === 'kehilangan' ? 'barang.tanggapan-kehilangan' : 'barang.tanggapan';
+        return view($view, compact('report', 'claim', 'nomor'));
     }
 
     public function verifikasi(Report $report, ItemClaim $claim)
@@ -107,6 +108,15 @@ class LaporanSayaController extends Controller
         $this->authorizeOwner($report);
         abort_unless($claim->report_id === $report->id, 404);
         abort_unless($claim->current_step == 2 && !$claim->rejected_at, 422);
+
+        if ($report->item_kind === 'kehilangan') {
+            abort_unless($claim->owner_submitted_at, 422);
+            $claim->forceFill(['owner_verified_at' => now()])->save();
+            $claim->load('report');
+            $claim->advanceIfBothVerified();
+
+            return back()->with('success', 'Tanggapan diverifikasi.');
+        }
 
         $claim->forceFill(['current_step' => 3])->save();
 
@@ -151,10 +161,15 @@ class LaporanSayaController extends Controller
     /** Dipanggil saat notifikasi ditutup (X). */
     public function baca(ItemClaim $claim)
     {
-        abort_unless($claim->report && $claim->report->user_id === auth()->id(), 403);
+        $claim->loadMissing('report');
+        $uid = auth()->id();
 
-        if (!$claim->reporter_seen_at) {
-            $claim->forceFill(['reporter_seen_at' => now()])->save();
+        if ($claim->report->user_id === $uid) {
+            if (!$claim->reporter_seen_at) $claim->forceFill(['reporter_seen_at' => now()])->save();
+        } elseif ($claim->user_id === $uid) {
+            if (!$claim->claimant_seen_at) $claim->forceFill(['claimant_seen_at' => now()])->save();
+        } else {
+            abort(403);
         }
 
         return response()->noContent();
@@ -163,5 +178,37 @@ class LaporanSayaController extends Controller
     private function authorizeOwner(Report $report): void
     {
         abort_unless($report->user_id === auth()->id() && $report->type === 'barang_hilang', 403);
+    }
+    /** KEHILANGAN: pemilik mengirim berkas kepemilikannya. */
+    public function kirimBerkas(Request $request, Report $report, ItemClaim $claim)
+    {
+        $this->authorizeOwner($report);
+        abort_unless($claim->report_id === $report->id && $report->item_kind === 'kehilangan', 404);
+        abort_unless($claim->current_step == 2 && !$claim->rejected_at && !$claim->owner_submitted_at, 422);
+
+        $data = $request->validate([
+            'owner_unique_feature' => 'required|string',
+            'owner_inner_color'    => 'required|string',
+            'owner_full_detail'    => 'required|string',
+            'owner_proof_photo'    => 'required|file|mimes:jpeg,png,jpg,webp,pdf|max:5120',
+        ], [
+            'owner_unique_feature.required' => 'Identitas unik barang wajib diisi.',
+            'owner_inner_color.required'    => 'Warna furing/lapisan dalam wajib diisi.',
+            'owner_full_detail.required'    => 'Penjelasan rinci wajib diisi.',
+            'owner_proof_photo.required'    => 'Foto lama bersama barang wajib diunggah.',
+        ]);
+
+        $path = $request->file('owner_proof_photo')->store('claims/owner-proofs', 'public');
+
+        $claim->forceFill([
+            'owner_unique_feature' => $data['owner_unique_feature'],
+            'owner_inner_color'    => $data['owner_inner_color'],
+            'owner_full_detail'    => $data['owner_full_detail'],
+            'owner_proof_photo'    => $path,
+            'owner_submitted_at'   => now(),
+            'claimant_seen_at'     => null, // supaya penemu mendapat notifikasi
+        ])->save();
+
+        return back()->with('success', 'Berkas terkirim. Sekarang Anda bisa membuka tanggapan penemu.');
     }
 }

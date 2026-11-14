@@ -200,26 +200,17 @@
 
                             {{-- LOGIKA TOMBOL KLAIM ATAU BADGE SELESAI --}}
                             @if ($report->status == 'resolved' || $report->status == 'selesai')
-                            {{-- Jika sudah selesai: Kunci dan beri label hijau --}}
-                            <span class="rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-2 text-xs font-bold text-emerald-700">
-                                Tuntas Dikembalikan
-                            </span>
+                            <span class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-xs font-bold text-emerald-700">Tuntas Dikembalikan</span>
                             @else
-                            {{-- Jika belum selesai & jenisnya penemuan: Tampilkan tombol klaim --}}
-                            @if ($report->item_kind == 'penemuan')
                             @auth
                             @if ($report->user_id !== auth()->id())
-                            <a href="{{ route('barang.klaim.create', $report->id) }}"
-                                class="rounded-xl bg-[#0c203b] px-5 py-2 text-xs font-bold text-white hover:bg-slate-800 transition-all">
-                                Klaim Temuan
-                            </a>
+                            <a href="{{ route('barang.klaim.create', $report->id) }}" class="rounded-xl bg-[#0c203b] px-5 py-2 text-xs font-bold text-white transition-all hover:bg-slate-800">Klaim Temuan</a>
                             @else
-                            <a href="{{ route('laporan.barang.saya.show', $report) }}" class="rounded-xl bg-slate-100 px-5 py-2 text-xs font-bold text-slate-600">
-                                Lihat Tanggapan
-                            </a>
+                            <a href="{{ route('laporan.barang.saya.show', $report) }}" class="rounded-xl bg-slate-100 px-5 py-2 text-xs font-bold text-slate-600">Lihat Tanggapan</a>
                             @endif
+                            @else
+                            <button type="button" @click="modal = 'login'" class="rounded-xl bg-[#0c203b] px-5 py-2 text-xs font-bold text-white transition-all hover:bg-slate-800">Klaim Temuan</button>
                             @endauth
-                            @endif
                             @endif
                         </div>
                     </div>

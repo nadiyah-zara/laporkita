@@ -48,7 +48,7 @@
                     </a>
 
                     <a href="#" class="text-slate-400 hover:text-slate-900">
-                        Histori
+                        Dokumentasi Penanganan
                     </a>
                 </nav>
             </div>

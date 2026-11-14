@@ -94,6 +94,10 @@ Route::middleware('auth')->group(function () {
     // Action Verifikasi Scan QR Serah Terima Selesai (Step 5 -> Step 6)
     Route::get('/lapor-barang-hilang/aktivitas-klaim/{claim}/konfirmasi-serah-terima', [ItemClaimController::class, 'konfirmasi'])
         ->name('barang.klaim.konfirmasi');
+    Route::post('/lapor-barang-hilang/aktivitas-klaim/{claim}/verifikasi-berkas', [ItemClaimController::class, 'verifikasiBerkas'])
+        ->name('barang.klaim.verifikasi');
+    Route::post('/lapor-barang-hilang/aktivitas-klaim/{claim}/tolak-berkas', [ItemClaimController::class, 'tolakBerkas'])
+        ->name('barang.klaim.tolak');
 });
 
 Route::middleware('auth')->prefix('laporan-barang/saya')->group(function () {
@@ -104,6 +108,8 @@ Route::middleware('auth')->prefix('laporan-barang/saya')->group(function () {
     Route::post('/{report}/tanggapan/{claim}/verifikasi', [LaporanSayaController::class, 'verifikasi'])->name('laporan.barang.tanggapan.verifikasi');
     Route::post('/{report}/tanggapan/{claim}/tolak', [LaporanSayaController::class, 'tolak'])->name('laporan.barang.tanggapan.tolak');
     Route::post('/notifikasi/{claim}/baca', [LaporanSayaController::class, 'baca'])->name('notifikasi.baca');
+    Route::post('/{report}/tanggapan/{claim}/berkas', [LaporanSayaController::class, 'kirimBerkas'])
+        ->name('laporan.barang.tanggapan.berkas');
 });
 
 require __DIR__ . '/auth.php';

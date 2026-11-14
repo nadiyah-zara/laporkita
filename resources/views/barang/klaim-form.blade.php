@@ -1,11 +1,12 @@
+@php $hilang = $report->item_kind === 'kehilangan'; @endphp
 <x-public-layout title="Klaim Temuan - LaporKita">
     <main class="min-h-screen bg-[#f4f7fb] py-8 px-4 sm:px-6">
         <div class="mx-auto max-w-4xl">
 
             {{-- TOMBOL KEMBALI --}}
             <div class="mb-6">
-                <a href="{{ route('laporan.barang.index') }}" 
-                class="inline-flex items-center gap-2 rounded-xl bg-[#0066FF] px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-blue-700">
+                <a href="{{ route('laporan.barang.index') }}"
+                    class="inline-flex items-center gap-2 rounded-xl bg-[#0066FF] px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-blue-700">
                     <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                     </svg>
@@ -32,11 +33,11 @@
                     </div>
                     <div class="flex-1">
                         <div class="flex items-center gap-2">
-                            <h3 class="text-sm font-bold text-[#0c203b]">Saya Ingin Mengklaim Barang</h3>
+                            <h3 class="text-sm font-bold text-[#0c203b]">{{ $hilang ? 'Saya Menemukan Barang Ini' : 'Saya Ingin Mengklaim Barang' }}</h3>
                             <span class="rounded-md bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-600">Alur Aktif</span>
                         </div>
                         <p class="mt-1 text-xs text-slate-500 leading-relaxed">
-                            Untuk pemilik sah: Buktikan kepemilikan melalui nomor seri, deskripsi rahasia, dan jadwalkan pengambilan fisik di posko berwenang.
+                            {{ $hilang ? 'Untuk penemu: jelaskan barang yang Anda temukan agar pemilik dapat mencocokkannya, lalu jadwalkan pengembalian fisik.' : 'Untuk pemilik sah: Buktikan kepemilikan melalui nomor seri, deskripsi rahasia, dan jadwalkan pengambilan fisik di posko berwenang.' }}
                         </p>
                         <span class="mt-2 inline-flex items-center gap-1 text-xs font-bold text-blue-600">
                             Mulai Verifikasi 4 Langkah &rarr;
@@ -115,7 +116,7 @@
                             <span class="flex h-6 w-6 items-center justify-center rounded-lg bg-blue-50 text-xs font-bold text-blue-600">2</span>
                             <div>
                                 <h4 class="text-sm font-bold text-[#0c203b]">Unggah Dokumen Bukti Pendukung</h4>
-                                <p class="text-[11px] text-slate-400">Bantu petugas mempercepat verifikasi dengan bukti kepemilikan terdahulu.</p>
+                                <p class="text-[11px] text-slate-400">{{ $hilang ? 'Lampirkan foto barang yang ada pada Anda sebagai bahan pencocokan.' : 'Bantu petugas mempercepat verifikasi dengan bukti kepemilikan terdahulu.' }}</p>
                             </div>
                         </div>
 
@@ -129,8 +130,8 @@
                                     File Siap Diunggah
                                 </span>
                             </div>
-                            <h5 class="mt-2 text-xs font-bold text-[#0c203b]">Foto Lama Bersama Barang</h5>
-                            <p class="text-[11px] text-slate-400">Foto saat Anda menggunakan barang tersebut di masa lalu.</p>
+                            <h5 class="mt-2 text-xs font-bold text-[#0c203b]">{{ $hilang ? 'Foto Barang' : 'Foto Lama Bersama Barang' }}</h5>
+                            <p class="text-[11px] text-slate-400">{{ $hilang ? 'Foto barang yang ada pada Anda saat ini.' : 'Foto saat Anda menggunakan barang tersebut di masa lalu.' }}</p>
 
                             {{-- Input File Asli (Tersembunyi) --}}
                             <input type="file"
@@ -196,6 +197,19 @@
 
                         </div>
                     </div>
+                    {{-- nomor WhatsApp di sini --}}
+                    @if ($hilang)
+                    <div class="border-t border-slate-100 pt-8">
+                        <label class="block text-xs font-bold text-slate-800">Nomor WhatsApp Aktif Anda <span class="text-rose-500">*</span></label>
+                        <div class="mt-1.5 flex overflow-hidden rounded-xl border border-slate-200 bg-[#f0f4ff]/40">
+                            <span class="flex items-center bg-slate-100 px-4 text-xs font-bold text-slate-600">+62</span>
+                            <input type="text" name="claimant_phone" value="{{ old('claimant_phone') }}" required placeholder="812-3456-7890"
+                                class="w-full bg-transparent p-3.5 text-xs text-slate-800 focus:outline-none">
+                        </div>
+                        @error('claimant_phone') <p class="mt-1 text-[11px] text-rose-600">{{ $message }}</p> @enderror
+                        <p class="mt-1.5 text-[10px] text-blue-600">🔒 Nomor hanya dibuka ke pemilik setelah kedua pihak saling memverifikasi.</p>
+                    </div>
+                    @endif
 
                     {{-- TOMBOL SUBMIT --}}
                     <div class="flex justify-end border-t border-slate-100 pt-6">
@@ -203,7 +217,7 @@
                             <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
                             </svg>
-                            <span>Kirim Berkas & Tunggu Verifikasi untuk mendapatkan barcode</span>
+                            <span>{{ $hilang ? 'Kirim Berkas' : 'Kirim Berkas & Tunggu Verifikasi untuk mendapatkan barcode' }}</span>
                         </button>
                     </div>
 
