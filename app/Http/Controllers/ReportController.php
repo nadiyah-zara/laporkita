@@ -15,7 +15,10 @@ class ReportController extends Controller
      */
     public function indexInfrastruktur(Request $request)
     {
-        $query = Report::infrastruktur()->with('category')->latest();
+        $query = Report::infrastruktur()
+            ->whereIn('status', ['verified', 'in_progress'])
+            ->with('category')
+            ->latest();
 
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
@@ -51,9 +54,9 @@ class ReportController extends Controller
         $categories = Category::where('type', 'infrastruktur')->get();
 
         $counts = [
-            'all' => Report::infrastruktur()->count(),
-            'in_progress' => Report::infrastruktur()->where('status', 'in_progress')->count(),
-            'needs_repair' => Report::infrastruktur()->whereIn('status', ['pending', 'verified'])->count(),
+            'all'          => Report::infrastruktur()->whereIn('status', ['verified', 'in_progress'])->count(),
+            'in_progress'  => Report::infrastruktur()->where('status', 'in_progress')->count(),
+            'needs_repair' => Report::infrastruktur()->where('status', 'verified')->count(),
         ];
 
         return view('laporan.index', compact('reports', 'categories', 'counts'));
@@ -131,6 +134,13 @@ class ReportController extends Controller
     public function showInfrastruktur($id)
     {
         $report = Report::infrastruktur()->with(['category', 'user'])->findOrFail($id);
+
+        $layakPublik = in_array($report->status, ['verified', 'in_progress', 'done', 'resolved']);
+        $berhak = Auth::check() && (Auth::id() === $report->user_id || Auth::user()->role === 'admin');
+
+        // Laporan yang belum diverifikasi atau ditolak hanya boleh dilihat pelapor dan admin
+        abort_unless($layakPublik || $berhak, 404);
+
         return view('laporan.show', compact('report'));
     }
 
@@ -296,6 +306,6 @@ class ReportController extends Controller
         ]);
 
         return redirect()->route('laporan.barang.saya')
-    ->with('success', 'Laporan barang berhasil diterbitkan!');
+            ->with('success', 'Laporan barang berhasil diterbitkan!');
     }
 }

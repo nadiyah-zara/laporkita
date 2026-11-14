@@ -7,6 +7,10 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\PetaLayananController;
 use App\Http\Controllers\ItemClaimController;
 use App\Http\Controllers\LaporanSayaController;
+use App\Http\Controllers\DokumentasiController;
+use App\Http\Controllers\HistoriController;
+use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\LaporanInfrastrukturController;
 
 // ==========================================================
 // 1. RUTE PUBLIK (BISA DILIHAT OLEH UMUM / TANPA LOGIN)
@@ -30,8 +34,13 @@ Route::get('/laporan/detail/{id}', [ReportController::class, 'showInfrastruktur'
 Route::get('/lapor-barang-hilang', [ReportController::class, 'indexBarang'])
     ->name('laporan.barang.index');
 
+Route::get('/dokumentasi-penanganan', [DokumentasiController::class, 'index'])
+    ->name('dokumentasi.index');
+
 Route::get('/dashboard', function () {
-    return redirect()->route('beranda');
+    return auth()->user()->role === 'admin'
+        ? redirect()->route('admin.dashboard')
+        : redirect()->route('beranda');
 })->middleware(['auth'])->name('dashboard');
 
 // ==========================================================
@@ -71,7 +80,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/lapor-barang-hilang/simpan', [ReportController::class, 'storeBarang'])
         ->name('laporan.barang.store');
 
-
+    Route::get('/histori-laporan', [HistoriController::class, 'index'])->name('histori.index');
 
 
     // ==========================================
@@ -112,4 +121,17 @@ Route::middleware('auth')->prefix('laporan-barang/saya')->group(function () {
         ->name('laporan.barang.tanggapan.berkas');
 });
 
+Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
+
+    Route::prefix('laporan-infrastruktur')->name('infrastruktur.')->group(function () {
+        Route::get('/', [LaporanInfrastrukturController::class, 'index'])->name('index');
+        Route::get('/{report}', [LaporanInfrastrukturController::class, 'show'])->name('show');
+        Route::post('/{report}/verifikasi', [LaporanInfrastrukturController::class, 'verifikasi'])->name('verifikasi');
+        Route::post('/{report}/tolak', [LaporanInfrastrukturController::class, 'tolak'])->name('tolak');
+        Route::post('/{report}/tugaskan', [LaporanInfrastrukturController::class, 'tugaskan'])->name('tugaskan');
+        Route::post('/{report}/progres', [LaporanInfrastrukturController::class, 'progres'])->name('progres');
+        Route::post('/{report}/selesai', [LaporanInfrastrukturController::class, 'selesai'])->name('selesai');
+    });
+});
 require __DIR__ . '/auth.php';

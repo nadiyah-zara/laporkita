@@ -128,4 +128,10 @@ class Report extends Model
             default       => 'Perlu Diperbaiki',
         };
     }
+
+    /** Laporan yang sudah selesai ditangani (aman ditampilkan ke publik). */
+public function scopeSelesai(Builder $query): void
+{
+    $query->whereIn('status', ['done', 'resolved']);
+}
 }
