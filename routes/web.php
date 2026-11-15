@@ -103,9 +103,7 @@ Route::middleware('auth')->group(function () {
     // Foto 4 Action: Simpan Kesepakatan COD Pengambilan Barang
     Route::post('/lapor-barang-hilang/aktivitas-klaim/{claim_id}/kesepakatan', [ItemClaimController::class, 'simpanKesepakatan'])
         ->name('barang.klaim.kesepakatan');
-    // Helper Khusus Demo Dosen Hari Senin (Bisa klik untuk simulasi penemu menerima)
-    Route::get('/lapor-barang-hilang/aktivitas-klaim/{claim_id}/simulasi', [ItemClaimController::class, 'simulasiNextStep'])
-        ->name('barang.klaim.simulasi');
+        
     // Action Verifikasi Scan QR Serah Terima Selesai (Step 5 -> Step 6)
     Route::get('/lapor-barang-hilang/aktivitas-klaim/{claim}/konfirmasi-serah-terima', [ItemClaimController::class, 'konfirmasi'])
         ->name('barang.klaim.konfirmasi');

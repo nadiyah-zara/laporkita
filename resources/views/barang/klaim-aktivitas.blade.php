@@ -88,38 +88,9 @@
                     @endif
 
                     {{-- ======================================================= --}}
-                    {{-- TAMPILAN JIKA STEP 3: DIVERIFIKASI (SESUAI FOTO 3)        --}}
-                    {{-- ======================================================= --}}
-                    @if ($claim->current_step == 3 && !$claim->rejected_at)
-                    <div class="space-y-6">
-                        <div class="flex items-center gap-3">
-                            <span class="flex h-6 w-6 items-center justify-center rounded-lg bg-blue-50 text-xs font-bold text-blue-600">4</span>
-                            <div>
-                                <h4 class="text-sm font-bold text-[#0c203b]">Lakukan Kesepakatan</h4>
-                                <p class="text-[11px] text-slate-400">Hubungi nomor berikut, lalu buat kesepakatan terkait waktu, tanggal, jam, dan tempat untuk pengambilan barang</p>
-                            </div>
-                        </div>
-
-                        <div>
-                            <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $claim->report->reporter_phone) }}?text=Halo,%20saya%20pemilik%20klaim%20{{ $claim->claim_code }}%20untuk%20{{ urlencode($claim->report->title) }}." target="_blank" class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 text-xs font-bold text-white shadow-md hover:bg-emerald-700">
-                                <span class="text-base"></span>
-                                <span>Hubungi & Buat Kesepakatan</span>
-                            </a>
-                        </div>
-
-                        {{-- Tombol Lanjut ke Step 4 --}}
-                        <div class="border-t border-slate-100 pt-4">
-                            <a href="{{ route('barang.klaim.simulasi', $claim->id) }}" class="text-xs font-bold text-blue-600 hover:underline">
-                                Sudah selesai WhatsApp? Klik di sini untuk menginput hasil kesepakatan &rarr;
-                            </a>
-                        </div>
-                    </div>
-                    @endif
-
-                    {{-- ======================================================= --}}
                     {{-- TAMPILAN JIKA STEP 4: FORM KESEPAKATAN COD (SESUAI FOTO 4) --}}
                     {{-- ======================================================= --}}
-                    @if ($claim->current_step == 4 && !$claim->rejected_at)
+                    @if (in_array($claim->current_step, [3, 4]) && !$claim->rejected_at)
                     <div class="space-y-6">
                         <div class="flex items-center gap-3">
                             <span class="flex h-6 w-6 items-center justify-center rounded-lg bg-blue-50 text-xs font-bold text-blue-600">4</span>
@@ -261,14 +232,7 @@
                                         </div>
 
                                         <p class="font-mono text-sm font-bold tracking-wider text-blue-600">{{ $claim->claim_code }}</p>
-
-                                        {{-- Tombol Langsung untuk Demo di Laptop --}}
-                                        <div class="mt-4 rounded-xl bg-blue-50 p-2.5">
-                                            <a href="{{ route('barang.klaim.konfirmasi', $claim->id) }}"
-                                                class="text-[11px] font-bold text-blue-600 hover:underline">
-                                                ⚡ Klik di Sini untuk Uji Coba Konfirmasi Selesai (Simulasi Scan)
-                                            </a>
-                                        </div>
+                                        
 
                                         <button type="button"
                                             @click="qrOpen = false"

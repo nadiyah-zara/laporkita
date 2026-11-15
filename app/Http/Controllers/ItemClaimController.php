@@ -134,34 +134,7 @@ abort_if($report->hidden_at, 404);
         return back()->with('success', 'Kesepakatan berhasil dikonfirmasi! QR tiket telah terbit.');
     }
 
-    /**
-     * Helper Simulasi Demo Dosen: Majukan Step Stepper Secara Instan
-     */
-    public function simulasiNextStep($claimId)
-    {
-        $claim = ItemClaim::with('report')->findOrFail($claimId);
-
-        if ($claim->current_step < 6) {
-            $next = $claim->current_step + 1;
-            $claim->update([
-                'current_step' => $next,
-                'status' => match ($next) {
-                    3 => 'verified',
-                    4 => 'agreement',
-                    5 => 'ready_pickup',
-                    6 => 'completed',
-                    default => 'pending'
-                }
-            ]);
-
-            if ($next === 6) {
-                $claim->report->update(['status' => 'resolved']);
-            }
-        }
-
-        return back()->with('success', "Simulasi berhasil! Alur klaim kini di Step {$claim->current_step}.");
-    }
-
+    
     /**
      * Verifikasi Serah Terima Selesai (Hasil Scan QR Penemu) -> Step 6: Selesai
      */
