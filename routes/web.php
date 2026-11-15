@@ -13,6 +13,10 @@ use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\LaporanInfrastrukturController;
 use App\Http\Controllers\NotifikasiController;
 use App\Http\Controllers\Admin\LaporanBarangController;
+use App\Http\Controllers\Admin\KategoriController;
+use App\Http\Controllers\Admin\PenggunaController;
+use App\Http\Controllers\Admin\RekapController;
+use App\Http\Controllers\Admin\ProfilController;
 
 // ==========================================================
 // 1. RUTE PUBLIK (BISA DILIHAT OLEH UMUM / TANPA LOGIN)
@@ -129,6 +133,7 @@ Route::middleware('auth')->prefix('laporan-barang/saya')->group(function () {
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
 
+    // Laporan infrastruktur
     Route::prefix('laporan-infrastruktur')->name('infrastruktur.')->group(function () {
         Route::get('/', [LaporanInfrastrukturController::class, 'index'])->name('index');
         Route::get('/{report}', [LaporanInfrastrukturController::class, 'show'])->name('show');
@@ -138,11 +143,30 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::post('/{report}/progres', [LaporanInfrastrukturController::class, 'progres'])->name('progres');
         Route::post('/{report}/selesai', [LaporanInfrastrukturController::class, 'selesai'])->name('selesai');
     });
+
+    // Barang hilang (moderasi)
     Route::prefix('barang-hilang')->name('barang.')->group(function () {
-    Route::get('/', [LaporanBarangController::class, 'index'])->name('index');
-    Route::get('/{report}', [LaporanBarangController::class, 'show'])->name('show');
-    Route::post('/{report}/sembunyikan', [LaporanBarangController::class, 'sembunyikan'])->name('sembunyikan');
-    Route::post('/{report}/pulihkan', [LaporanBarangController::class, 'pulihkan'])->name('pulihkan');
-});
+        Route::get('/', [LaporanBarangController::class, 'index'])->name('index');
+        Route::get('/{report}', [LaporanBarangController::class, 'show'])->name('show');
+        Route::post('/{report}/sembunyikan', [LaporanBarangController::class, 'sembunyikan'])->name('sembunyikan');
+        Route::post('/{report}/pulihkan', [LaporanBarangController::class, 'pulihkan'])->name('pulihkan');
+    });
+
+    // Kategori
+    Route::resource('kategori', KategoriController::class)->only(['index', 'store', 'update', 'destroy']);
+
+    // Pengguna
+    Route::get('/pengguna', [PenggunaController::class, 'index'])->name('pengguna.index');
+    Route::post('/pengguna/{user}/blokir', [PenggunaController::class, 'blokir'])->name('pengguna.blokir');
+    Route::post('/pengguna/{user}/buka', [PenggunaController::class, 'buka'])->name('pengguna.buka');
+
+    // Rekap
+    Route::get('/rekap', [RekapController::class, 'index'])->name('rekap.index');
+    Route::get('/rekap/ekspor', [RekapController::class, 'ekspor'])->name('rekap.ekspor');
+
+    // Profil admin
+    Route::get('/profil', [ProfilController::class, 'edit'])->name('profil.edit');
+    Route::patch('/profil', [ProfilController::class, 'update'])->name('profil.update');
+    Route::put('/profil/password', [ProfilController::class, 'password'])->name('profil.password');
 });
 require __DIR__ . '/auth.php';

@@ -27,21 +27,18 @@
                 $link = fn ($active) => $active ? 'bg-blue-600 text-white' : 'text-blue-100 hover:bg-white/10';
                 @endphp
 
-                <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 rounded-xl px-4 py-2.5 {{ $link(request()->routeIs('admin.dashboard')) }}">
-                    📊 Dashboard
-                </a>
+                <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 rounded-xl px-4 py-2.5 {{ $link(request()->routeIs('admin.dashboard')) }}">📊 Dashboard</a>
+                <a href="{{ route('admin.infrastruktur.index') }}" class="flex items-center gap-3 rounded-xl px-4 py-2.5 {{ $link(request()->routeIs('admin.infrastruktur.*')) }}">🏗️ Laporan Infrastruktur</a>
+                <a href="{{ route('admin.barang.index') }}" class="flex items-center gap-3 rounded-xl px-4 py-2.5 {{ $link(request()->routeIs('admin.barang.*')) }}">🔍 Barang Hilang</a>
 
-                {{-- Menu berikut aktif setelah modulnya dibuat --}}
-                <a href="{{ route('admin.infrastruktur.index') }}" class="flex items-center gap-3 rounded-xl px-4 py-2.5 {{ $link(request()->routeIs('admin.infrastruktur.*')) }}">
-                    🏗️ Laporan Infrastruktur
-                </a>
-                <a href="{{ route('admin.barang.index') }}" class="flex items-center gap-3 rounded-xl px-4 py-2.5 {{ $link(request()->routeIs('admin.barang.*')) }}">
-                    🔍 Barang Hilang
-                </a>
+                <p class="px-4 pb-1 pt-4 text-[10px] font-bold uppercase tracking-widest text-blue-300/60">Kelola</p>
+                <a href="{{ route('admin.kategori.index') }}" class="flex items-center gap-3 rounded-xl px-4 py-2.5 {{ $link(request()->routeIs('admin.kategori.*')) }}">🏷️ Kategori</a>
+                <a href="{{ route('admin.pengguna.index') }}" class="flex items-center gap-3 rounded-xl px-4 py-2.5 {{ $link(request()->routeIs('admin.pengguna.*')) }}">👥 Pengguna</a>
+                <a href="{{ route('admin.rekap.index') }}" class="flex items-center gap-3 rounded-xl px-4 py-2.5 {{ $link(request()->routeIs('admin.rekap.*')) }}">📈 Rekap</a>
             </nav>
-
             <div class="absolute inset-x-0 bottom-0 space-y-2 border-t border-white/10 p-4 text-xs">
                 <p class="truncate px-2 font-semibold text-blue-100">{{ auth()->user()->name }}</p>
+                <a href="{{ route('admin.profil.edit') }}" class="block rounded-lg px-2 py-1.5 {{ request()->routeIs('admin.profil.*') ? 'bg-white/10 text-white' : 'text-blue-200 hover:bg-white/10' }}">⚙ Profil Saya</a>
                 <a href="{{ route('beranda') }}" class="block rounded-lg px-2 py-1.5 text-blue-200 hover:bg-white/10">↗ Lihat Situs</a>
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
