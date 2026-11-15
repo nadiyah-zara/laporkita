@@ -19,7 +19,7 @@ class EnsureUserNotBlocked
             $request->session()->regenerateToken();
 
             return redirect()->route('beranda')
-                ->with('error', 'Akun Anda diblokir oleh admin. Hubungi admin untuk informasi lebih lanjut.');
+                ->with('blocked', 'Akun Anda diblokir oleh admin. Hubungi admin untuk informasi lebih lanjut.');
         }
 
         return $next($request);

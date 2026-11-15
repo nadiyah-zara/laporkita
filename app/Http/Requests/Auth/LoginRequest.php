@@ -49,6 +49,13 @@ class LoginRequest extends FormRequest
                 'email' => trans('auth.failed'),
             ]);
         }
+        if (Auth::user()->blocked_at) {
+            Auth::logout();
+
+            throw ValidationException::withMessages([
+                'email' => 'Akun Anda diblokir oleh admin. Hubungi admin untuk informasi lebih lanjut.',
+            ]);
+        }
 
         RateLimiter::clear($this->throttleKey());
     }
@@ -81,6 +88,6 @@ class LoginRequest extends FormRequest
      */
     public function throttleKey(): string
     {
-        return Str::transliterate(Str::lower($this->string('email')).'|'.$this->ip());
+        return Str::transliterate(Str::lower($this->string('email')) . '|' . $this->ip());
     }
 }

@@ -12,7 +12,7 @@ class LaporanBarangController extends Controller
     public function index(Request $request)
     {
         $tab = $request->query('tab', 'semua');
-        $aktif = fn () => Report::barang()->whereNull('hidden_at');
+        $aktif = fn() => Report::barang()->whereNull('hidden_at');
         $belumSelesai = ['resolved', 'done'];
 
         $counts = [
@@ -36,8 +36,8 @@ class LaporanBarangController extends Controller
         if ($search = trim((string) $request->query('search'))) {
             $query->where(function ($q) use ($search) {
                 $q->where('title', 'like', "%{$search}%")
-                  ->orWhere('ticket_code', 'like', "%{$search}%")
-                  ->orWhere('address', 'like', "%{$search}%");
+                    ->orWhere('ticket_code', 'like', "%{$search}%")
+                    ->orWhere('address', 'like', "%{$search}%");
             });
         }
 
@@ -67,8 +67,9 @@ class LaporanBarangController extends Controller
 
         DB::transaction(function () use ($report, $data) {
             $report->forceFill([
-                'hidden_at'     => now(),
-                'hidden_reason' => $data['hidden_reason'],
+                'hidden_at'      => now(),
+                'hidden_reason'  => $data['hidden_reason'],
+                'hidden_seen_at' => null,
             ])->save();
 
             // Klaim yang belum selesai ikut ditutup

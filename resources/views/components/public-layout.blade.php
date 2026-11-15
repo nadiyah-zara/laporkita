@@ -151,6 +151,16 @@
             </div>
     </header>
 
+    @if (session('blocked'))
+    <div x-data="{ show: true }" x-init="setTimeout(() => show = false, 10000)" x-show="show" x-transition
+        class="fixed left-1/2 top-24 z-[60] w-[calc(100%-2rem)] max-w-md -translate-x-1/2">
+        <div class="flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs font-semibold text-rose-700 shadow-xl">
+            <span class="text-base"></span>
+            <span class="flex-1 leading-relaxed">{{ session('blocked') }}</span>
+            <button type="button" @click="show = false" class="text-rose-400 hover:text-rose-700">✕</button>
+        </div>
+    </div>
+    @endif
     <main>{{ $slot }}</main>
 
     {{-- ================================================================= --}}

@@ -10,11 +10,6 @@
                     </svg>
                     Kembali
                 </a>
-
-                {{-- TOMBOL RAHASIA UNTUK PRESENTASI SENIN (Bisa memajukan stepper langsung di depan dosen!) --}}
-                <a href="{{ route('barang.klaim.simulasi', $claim->id) }}" class="rounded-xl border border-dashed border-blue-300 bg-white px-3 py-1.5 text-[11px] font-bold text-blue-600 hover:bg-blue-50" title="Klik ini saat demo untuk memajukan status stepper tanpa repot!">
-                    ⚡ Simulasi Penemu Menerima (Step Selanjutnya)
-                </a>
             </div>
 
             {{-- HEADER JUDUL KODE KLAIM --}}
@@ -107,7 +102,7 @@
 
                         <div>
                             <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $claim->report->reporter_phone) }}?text=Halo,%20saya%20pemilik%20klaim%20{{ $claim->claim_code }}%20untuk%20{{ urlencode($claim->report->title) }}." target="_blank" class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 text-xs font-bold text-white shadow-md hover:bg-emerald-700">
-                                <span class="text-base">💬</span>
+                                <span class="text-base"></span>
                                 <span>Hubungi & Buat Kesepakatan</span>
                             </a>
                         </div>
@@ -188,15 +183,15 @@
                         {{-- TIGA KARTU INFORMASI PENGAMBILAN --}}
                         <div class="space-y-3">
                             <div class="flex items-center gap-3 rounded-2xl bg-[#f0f4ff]/50 p-4 text-xs font-bold text-slate-800 border border-blue-50">
-                                <span class="text-blue-600">📍</span>
+                                <span class="text-blue-600"></span>
                                 <span>{{ $claim->pickup_location ?? 'SPBU Sebelah kopi Kenangan Dr.Mansyur' }}</span>
                             </div>
                             <div class="flex items-center gap-3 rounded-2xl bg-[#f0f4ff]/50 p-4 text-xs font-bold text-slate-800 border border-blue-50">
-                                <span class="text-blue-600">📅</span>
+                                <span class="text-blue-600"></span>
                                 <span>{{ $claim->pickup_date ? $claim->pickup_date->translatedFormat('l, d F Y') : 'Kamis, 12 November 2026' }}</span>
                             </div>
                             <div class="flex items-center gap-3 rounded-2xl bg-[#f0f4ff]/50 p-4 text-xs font-bold text-slate-800 border border-blue-50">
-                                <span class="text-blue-600">⏰</span>
+                                <span class="text-blue-600"></span>
                                 <span>{{ $claim->pickup_time ?? '12.00' }}</span>
                             </div>
                         </div>

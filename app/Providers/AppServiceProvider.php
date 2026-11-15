@@ -21,6 +21,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        \Carbon\Carbon::setLocale(config('app.locale'));
+
         View::composer('components.notification-bell', function ($view) {
             $notifs = collect();
 
@@ -82,6 +84,7 @@ class AppServiceProvider extends ServiceProvider
                         'read_url' => null,
                     ]);
                 }
+
                 // 4. Perkembangan laporan infrastruktur milikku
                 $logBaru = \App\Models\ReportLog::with('report')
                     ->whereNull('seen_at')
@@ -96,6 +99,23 @@ class AppServiceProvider extends ServiceProvider
                             . \Illuminate\Support\Str::limit((string) $l->note, 90),
                         'url'      => route('laporan.infrastruktur.detail', $l->report_id) . '#timeline',
                         'read_url' => route('notifikasi.log.baca', $l),
+                    ]);
+                }
+
+                // 5. Laporan barang milikku diturunkan admin
+                $disembunyikan = \App\Models\Report::where('user_id', $uid)
+                    ->where('type', 'barang_hilang')
+                    ->whereNotNull('hidden_at')->whereNull('hidden_seen_at')
+                    ->latest('hidden_at')->get();
+
+                foreach ($disembunyikan as $r) {
+                    $notifs->push([
+                        'id'       => 'hidden-' . $r->id,
+                        'title'    => 'Laporan Anda Disembunyikan Admin',
+                        'body'     => 'Laporan “' . $r->title . ' (' . $r->ticket_code . ')” diturunkan. Alasan: '
+                            . \Illuminate\Support\Str::limit((string) $r->hidden_reason, 90),
+                        'url'      => route('laporan.barang.saya.show', $r),
+                        'read_url' => route('notifikasi.laporan.baca', $r),
                     ]);
                 }
             }

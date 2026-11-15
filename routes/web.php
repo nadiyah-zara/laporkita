@@ -114,8 +114,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/lapor-barang-hilang/aktivitas-klaim/{claim}/tolak-berkas', [ItemClaimController::class, 'tolakBerkas'])
         ->name('barang.klaim.tolak');
 
-
+    // =========NOTIFIKASI (BISA DIBACA OLEH PEMILIK LAPORAN & PEMILIK KLAIM)==========
     Route::post('/notifikasi/log/{log}/baca', [NotifikasiController::class, 'logBaca'])->name('notifikasi.log.baca');
+    Route::post('/notifikasi/laporan/{report}/baca', [NotifikasiController::class, 'laporanBaca'])->name('notifikasi.laporan.baca');
 });
 
 Route::middleware('auth')->prefix('laporan-barang/saya')->group(function () {

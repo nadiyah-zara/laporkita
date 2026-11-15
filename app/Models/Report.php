@@ -58,6 +58,7 @@ class Report extends Model
             'longitude' => 'float',
             'photos' => 'array',
             'hidden_at' => 'datetime',
+            'hidden_seen_at' => 'datetime',
         ];
     }
 

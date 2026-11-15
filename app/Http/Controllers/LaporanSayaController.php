@@ -81,6 +81,10 @@ class LaporanSayaController extends Controller
         $claims = $report->claims()->with('user')->oldest()->get();
         $claims->each(fn($c, $i) => $c->nomor = $i + 1);
 
+        if ($report->hidden_at && !$report->hidden_seen_at) {
+            $report->forceFill(['hidden_seen_at' => now()])->save();
+        }
+
         return view('barang.saya-detail', [
             'report' => $report,
             'claims' => $claims->reverse()->values(),
