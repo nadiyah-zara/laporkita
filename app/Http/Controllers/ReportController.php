@@ -133,13 +133,17 @@ class ReportController extends Controller
      */
     public function showInfrastruktur($id)
     {
-        $report = Report::infrastruktur()->with(['category', 'user'])->findOrFail($id);
+        $report = Report::infrastruktur()->with(['category', 'user', 'logs'])->findOrFail($id);
 
         $layakPublik = in_array($report->status, ['verified', 'in_progress', 'done', 'resolved']);
         $berhak = Auth::check() && (Auth::id() === $report->user_id || Auth::user()->role === 'admin');
 
         // Laporan yang belum diverifikasi atau ditolak hanya boleh dilihat pelapor dan admin
         abort_unless($layakPublik || $berhak, 404);
+
+        if (Auth::check() && Auth::id() === $report->user_id) {
+            $report->logs()->whereNull('seen_at')->update(['seen_at' => now()]);
+        }
 
         return view('laporan.show', compact('report'));
     }
@@ -184,7 +188,7 @@ class ReportController extends Controller
     public function indexBarang(Request $request)
     {
         // Hanya tampilkan laporan yang AKTIF (belum selesai)
-        $query = Report::barang()
+        $query = Report::barang()->tampil()
             ->with('category')
             ->whereNotIn('status', ['resolved', 'done'])
             ->latest();
@@ -210,19 +214,19 @@ class ReportController extends Controller
 
         // Counts juga hanya hitung yang masih AKTIF
         $counts = [
-            'all'       => Report::barang()
+            'all'       => Report::barang()->tampil()
                 ->whereNotIn('status', ['resolved', 'done'])
                 ->count(),
-            'hilang'    => Report::barang()
+            'hilang'    => Report::barang()->tampil()
                 ->whereNotIn('status', ['resolved', 'done'])
                 ->where('item_kind', 'kehilangan')
                 ->count(),
-            'ditemukan' => Report::barang()
+            'ditemukan' => Report::barang()->tampil()
                 ->whereNotIn('status', ['resolved', 'done'])
                 ->where('item_kind', 'penemuan')
                 ->count(),
             // Khusus untuk info statistik: berapa yang sudah berhasil dikembalikan
-            'selesai'   => Report::barang()
+            'selesai'   => Report::barang()->tampil()
                 ->whereIn('status', ['resolved', 'done'])
                 ->count(),
         ];

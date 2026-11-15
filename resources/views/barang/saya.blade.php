@@ -52,6 +52,9 @@
                                     <span class="rounded-md bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700">
                                         {{ $item['jenis'] === 'milik' ? 'Laporan Saya' : 'Menanggapi' }}
                                     </span>
+                                    @if (!empty($item['hidden']))
+    <span class="rounded-md bg-rose-50 px-2 py-0.5 text-[10px] font-bold text-rose-600">Disembunyikan</span>
+@endif
                                     @if ($item['baru'] > 0)
                                         <span class="rounded-md bg-red-50 px-2 py-0.5 text-[10px] font-bold text-red-600">{{ $item['baru'] }} tanggapan baru</span>
                                     @endif

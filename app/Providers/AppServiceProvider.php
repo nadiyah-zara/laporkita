@@ -82,6 +82,22 @@ class AppServiceProvider extends ServiceProvider
                         'read_url' => null,
                     ]);
                 }
+                // 4. Perkembangan laporan infrastruktur milikku
+                $logBaru = \App\Models\ReportLog::with('report')
+                    ->whereNull('seen_at')
+                    ->whereHas('report', fn($q) => $q->where('user_id', $uid)->where('type', 'infrastruktur'))
+                    ->latest()->get();
+
+                foreach ($logBaru as $l) {
+                    $notifs->push([
+                        'id'       => 'log-' . $l->id,
+                        'title'    => $l->title,
+                        'body'     => 'Laporan “' . $l->report->title . ' (' . $l->report->ticket_code . ')”. '
+                            . \Illuminate\Support\Str::limit((string) $l->note, 90),
+                        'url'      => route('laporan.infrastruktur.detail', $l->report_id) . '#timeline',
+                        'read_url' => route('notifikasi.log.baca', $l),
+                    ]);
+                }
             }
 
             $view->with('navNotifs', $notifs);

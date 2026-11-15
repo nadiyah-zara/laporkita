@@ -9,7 +9,7 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        $infra = fn () => Report::infrastruktur();
+        $infra = fn() => Report::infrastruktur();
 
         $stats = [
             'pending'     => $infra()->where('status', 'pending')->count(),
@@ -28,8 +28,9 @@ class DashboardController extends Controller
             ->get();
 
         $barang = [
-            'aktif'   => Report::barang()->whereNotIn('status', ['resolved', 'done'])->count(),
-            'selesai' => Report::barang()->whereIn('status', ['resolved', 'done'])->count(),
+            'aktif'         => Report::barang()->whereNull('hidden_at')->whereNotIn('status', ['resolved', 'done'])->count(),
+            'selesai'       => Report::barang()->whereNull('hidden_at')->whereIn('status', ['resolved', 'done'])->count(),
+            'disembunyikan' => Report::barang()->whereNotNull('hidden_at')->count(),
         ];
 
         return view('admin.dashboard', compact('stats', 'butuhTindakan', 'barang'));

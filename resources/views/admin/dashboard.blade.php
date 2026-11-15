@@ -68,7 +68,10 @@
                 <div class="flex items-center justify-between rounded-xl bg-blue-50 px-4 py-3">
                     <span class="text-xs font-semibold text-blue-700">Laporan aktif</span>
                     <span class="text-xl font-extrabold text-blue-700">{{ $barang['aktif'] }}</span>
+                    <span class="text-xs font-semibold text-rose-700">Disembunyikan</span>
+                    <span class="text-xl font-extrabold text-rose-700">{{ $barang['disembunyikan'] }}</span>
                 </div>
+                <a href="{{ route('admin.barang.index') }}" class="mt-1 block text-center text-xs font-bold text-blue-600 hover:underline">Kelola laporan barang →</a>
                 <div class="flex items-center justify-between rounded-xl bg-emerald-50 px-4 py-3">
                     <span class="text-xs font-semibold text-emerald-700">Berhasil dikembalikan</span>
                     <span class="text-xl font-extrabold text-emerald-700">{{ $barang['selesai'] }}</span>

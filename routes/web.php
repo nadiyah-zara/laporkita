@@ -11,6 +11,8 @@ use App\Http\Controllers\DokumentasiController;
 use App\Http\Controllers\HistoriController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\LaporanInfrastrukturController;
+use App\Http\Controllers\NotifikasiController;
+use App\Http\Controllers\Admin\LaporanBarangController;
 
 // ==========================================================
 // 1. RUTE PUBLIK (BISA DILIHAT OLEH UMUM / TANPA LOGIN)
@@ -107,6 +109,9 @@ Route::middleware('auth')->group(function () {
         ->name('barang.klaim.verifikasi');
     Route::post('/lapor-barang-hilang/aktivitas-klaim/{claim}/tolak-berkas', [ItemClaimController::class, 'tolakBerkas'])
         ->name('barang.klaim.tolak');
+
+
+    Route::post('/notifikasi/log/{log}/baca', [NotifikasiController::class, 'logBaca'])->name('notifikasi.log.baca');
 });
 
 Route::middleware('auth')->prefix('laporan-barang/saya')->group(function () {
@@ -133,5 +138,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::post('/{report}/progres', [LaporanInfrastrukturController::class, 'progres'])->name('progres');
         Route::post('/{report}/selesai', [LaporanInfrastrukturController::class, 'selesai'])->name('selesai');
     });
+    Route::prefix('barang-hilang')->name('barang.')->group(function () {
+    Route::get('/', [LaporanBarangController::class, 'index'])->name('index');
+    Route::get('/{report}', [LaporanBarangController::class, 'show'])->name('show');
+    Route::post('/{report}/sembunyikan', [LaporanBarangController::class, 'sembunyikan'])->name('sembunyikan');
+    Route::post('/{report}/pulihkan', [LaporanBarangController::class, 'pulihkan'])->name('pulihkan');
+});
 });
 require __DIR__ . '/auth.php';

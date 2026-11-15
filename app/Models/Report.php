@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -9,10 +10,31 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
-    'ticket_code', 'user_id', 'category_id', 'type', 'item_kind', 'title', 'urgency', 'description',
-    'photo', 'photos', 'photo_after', 'latitude', 'longitude', 'address', 'reporter_name',
-    'reporter_phone', 'event_date', 'event_time', 'status', 'progress_percentage', 'current_step',
-    'supervisor_name', 'supervisor_notes', 'completion_notes', 'admin_note',
+    'ticket_code',
+    'user_id',
+    'category_id',
+    'type',
+    'item_kind',
+    'title',
+    'urgency',
+    'description',
+    'photo',
+    'photos',
+    'photo_after',
+    'latitude',
+    'longitude',
+    'address',
+    'reporter_name',
+    'reporter_phone',
+    'event_date',
+    'event_time',
+    'status',
+    'progress_percentage',
+    'current_step',
+    'supervisor_name',
+    'supervisor_notes',
+    'completion_notes',
+    'admin_note',
 ])]
 /**
  * @property int|null $progress_percentage
@@ -35,6 +57,7 @@ class Report extends Model
             'latitude' => 'float',
             'longitude' => 'float',
             'photos' => 'array',
+            'hidden_at' => 'datetime',
         ];
     }
 
@@ -52,6 +75,24 @@ class Report extends Model
     public function claims(): HasMany
     {
         return $this->hasMany(ItemClaim::class, 'report_id');
+    }
+
+    public function logs(): HasMany
+    {
+        return $this->hasMany(ReportLog::class)->oldest();
+    }
+
+    /** Catat satu peristiwa ke timeline. $notify=false berarti tidak memicu notifikasi. */
+    public function catat(string $title, ?string $note = null, ?string $photo = null, bool $notify = true): ReportLog
+    {
+        return $this->logs()->create([
+            'status'  => $this->status,
+            'step'    => $this->current_step,
+            'title'   => $title,
+            'note'    => $note,
+            'photo'   => $photo,
+            'seen_at' => $notify ? null : now(),
+        ]);
     }
 
     /** Hanya laporan barang hilang / ditemukan. */
@@ -72,12 +113,12 @@ class Report extends Model
      * - infrastruktur   : verified (Perlu Diperbaiki) dan in_progress (Sedang Diperbaiki)
      */
     public function scopeTayang(Builder $query): void
-    {
-        $query->where(function (Builder $w) {
-            $w->where(fn (Builder $b) => $b->where('type', 'barang_hilang')->where('status', 'verified'))
-                ->orWhere(fn (Builder $i) => $i->where('type', 'infrastruktur')->whereIn('status', ['verified', 'in_progress']));
-        });
-    }
+{
+    $query->whereNull('hidden_at')->where(function (Builder $w) {
+        $w->where(fn (Builder $b) => $b->where('type', 'barang_hilang')->where('status', 'verified'))
+            ->orWhere(fn (Builder $i) => $i->where('type', 'infrastruktur')->whereIn('status', ['verified', 'in_progress']));
+    });
+}
 
     /** Laporan dalam radius (km) dari titik pusat, memakai rumus Haversine. */
     public function scopeWithinRadius(Builder $query, float $lat, float $lng, float $km): void
@@ -93,7 +134,7 @@ class Report extends Model
     protected function photoUrl(): Attribute
     {
         return Attribute::get(
-            fn () => $this->photo ? asset('storage/' . $this->photo) : null
+            fn() => $this->photo ? asset('storage/' . $this->photo) : null
         );
     }
 
@@ -130,8 +171,14 @@ class Report extends Model
     }
 
     /** Laporan yang sudah selesai ditangani (aman ditampilkan ke publik). */
-public function scopeSelesai(Builder $query): void
+    public function scopeSelesai(Builder $query): void
 {
-    $query->whereIn('status', ['done', 'resolved']);
+    $query->whereIn('status', ['done', 'resolved'])->whereNull('hidden_at');
 }
+
+    /** Laporan yang tidak diturunkan admin. */
+    public function scopeTampil(Builder $query): void
+    {
+        $query->whereNull('hidden_at');
+    }
 }

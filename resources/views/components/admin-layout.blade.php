@@ -2,6 +2,7 @@
 
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -9,6 +10,7 @@
     <title>{{ $title }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
+
 <body class="bg-[#f4f7fb] text-slate-800 antialiased">
     <div class="flex min-h-screen" x-data="{ menu: false }">
 
@@ -22,7 +24,7 @@
 
             <nav class="space-y-1 p-4 text-sm font-semibold">
                 @php
-                    $link = fn ($active) => $active ? 'bg-blue-600 text-white' : 'text-blue-100 hover:bg-white/10';
+                $link = fn ($active) => $active ? 'bg-blue-600 text-white' : 'text-blue-100 hover:bg-white/10';
                 @endphp
 
                 <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 rounded-xl px-4 py-2.5 {{ $link(request()->routeIs('admin.dashboard')) }}">
@@ -30,9 +32,12 @@
                 </a>
 
                 {{-- Menu berikut aktif setelah modulnya dibuat --}}
-<a href="{{ route('admin.infrastruktur.index') }}" class="flex items-center gap-3 rounded-xl px-4 py-2.5 {{ $link(request()->routeIs('admin.infrastruktur.*')) }}">
-    🏗️ Laporan Infrastruktur
-</a>                <span class="flex cursor-not-allowed items-center gap-3 rounded-xl px-4 py-2.5 text-blue-200/50">🔍 Barang Hilang <em class="ml-auto text-[9px] not-italic">segera</em></span>
+                <a href="{{ route('admin.infrastruktur.index') }}" class="flex items-center gap-3 rounded-xl px-4 py-2.5 {{ $link(request()->routeIs('admin.infrastruktur.*')) }}">
+                    🏗️ Laporan Infrastruktur
+                </a>
+                <a href="{{ route('admin.barang.index') }}" class="flex items-center gap-3 rounded-xl px-4 py-2.5 {{ $link(request()->routeIs('admin.barang.*')) }}">
+                    🔍 Barang Hilang
+                </a>
             </nav>
 
             <div class="absolute inset-x-0 bottom-0 space-y-2 border-t border-white/10 p-4 text-xs">
@@ -58,4 +63,5 @@
         </div>
     </div>
 </body>
+
 </html>

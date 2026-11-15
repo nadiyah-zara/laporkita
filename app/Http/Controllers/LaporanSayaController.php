@@ -27,9 +27,9 @@ class LaporanSayaController extends Controller
                 'category_id' => $r->category_id,
                 'waktu' => $r->created_at,
                 'baru' => $r->klaim_baru,
+                'hidden' => (bool) $r->hidden_at,          // <- baris baru
                 'url' => route('laporan.barang.saya.show', $r),
             ]);
-
         $menanggapi = ItemClaim::with('report')->where('user_id', $uid)->get()
             ->filter(fn($c) => $c->report)
             ->map(fn($c) => [

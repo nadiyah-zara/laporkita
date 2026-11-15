@@ -9,8 +9,8 @@ use Illuminate\Http\Request;
 
 class LaporanInfrastrukturController extends Controller
 {
-// Sesuai stepper warga: 1 Dilaporkan, 2 Survey Tim, 3 Diverifikasi, 4 Persiapan, 5 Pengerjaan, 6 Selesai
-private const STEP = ['pending' => 1, 'verified' => 3, 'persiapan' => 4, 'pengerjaan' => 5, 'done' => 6];
+    // Sesuai stepper warga: 1 Dilaporkan, 2 Survey Tim, 3 Diverifikasi, 4 Persiapan, 5 Pengerjaan, 6 Selesai
+    private const STEP = ['pending' => 1, 'verified' => 3, 'persiapan' => 4, 'pengerjaan' => 5, 'done' => 6];
     public function index(Request $request)
     {
         $status = $request->query('status', 'semua');
@@ -35,8 +35,8 @@ private const STEP = ['pending' => 1, 'verified' => 3, 'persiapan' => 4, 'penger
         if ($search = trim((string) $request->query('search'))) {
             $query->where(function ($q) use ($search) {
                 $q->where('title', 'like', "%{$search}%")
-                  ->orWhere('ticket_code', 'like', "%{$search}%")
-                  ->orWhere('address', 'like', "%{$search}%");
+                    ->orWhere('ticket_code', 'like', "%{$search}%")
+                    ->orWhere('address', 'like', "%{$search}%");
             });
         }
 
@@ -67,6 +67,7 @@ private const STEP = ['pending' => 1, 'verified' => 3, 'persiapan' => 4, 'penger
         abort_unless($report->status === 'pending', 422);
 
         $report->forceFill(['status' => 'verified', 'current_step' => self::STEP['verified']])->save();
+        $report->catat('Laporan diverifikasi', 'Laporan Anda sudah diperiksa admin dan akan segera ditindaklanjuti.');
 
         return back()->with('success', 'Laporan diverifikasi. Silakan tugaskan petugas.');
     }
@@ -82,51 +83,64 @@ private const STEP = ['pending' => 1, 'verified' => 3, 'persiapan' => 4, 'penger
         );
 
         $report->forceFill(['status' => 'rejected', 'admin_note' => $data['admin_note']])->save();
+        $report->catat('Laporan ditolak', $data['admin_note']);
 
         return back()->with('success', 'Laporan ditolak.');
     }
 
     public function tugaskan(Request $request, Report $report)
-{
-    $this->pastikanInfrastruktur($report);
-    abort_unless(in_array($report->status, ['verified', 'in_progress']), 422);
+    {
+        $this->pastikanInfrastruktur($report);
+        abort_unless(in_array($report->status, ['verified', 'in_progress']), 422);
 
-    $data = $request->validate([
-        'supervisor_name'  => 'required|string|max:150',
-        'supervisor_phone' => 'required|string|max:25',
-        'scheduled_date'   => 'nullable|date',
-        'supervisor_notes' => 'nullable|string|max:1000',
-    ], [
-        'supervisor_name.required'  => 'Nama petugas wajib diisi.',
-        'supervisor_phone.required' => 'Nomor HP petugas wajib diisi agar pelapor bisa menghubungi.',
-    ]);
+        $data = $request->validate([
+            'supervisor_name'  => 'required|string|max:150',
+            'supervisor_phone' => 'required|string|max:25',
+            'scheduled_date'   => 'nullable|date',
+            'supervisor_notes' => 'nullable|string|max:1000',
+        ], [
+            'supervisor_name.required'  => 'Nama petugas wajib diisi.',
+            'supervisor_phone.required' => 'Nomor HP petugas wajib diisi agar pelapor bisa menghubungi.',
+        ]);
 
-    $report->forceFill([
-        'supervisor_name'  => $data['supervisor_name'],
-        'supervisor_phone' => $data['supervisor_phone'],
-        'scheduled_date'   => $data['scheduled_date'] ?? null,
-        'supervisor_notes' => $data['supervisor_notes'] ?? null,
-        'status'           => 'in_progress',
-        'current_step'     => ($report->progress_percentage ?? 0) > 0 ? self::STEP['pengerjaan'] : self::STEP['persiapan'],
-    ])->save();
+        $pertamaKali = $report->status === 'verified';
 
-    return back()->with('success', 'Petugas ditugaskan. Laporan kini berstatus sedang dikerjakan.');
-}
+        $report->forceFill([
+            'supervisor_name'  => $data['supervisor_name'],
+            'supervisor_phone' => $data['supervisor_phone'],
+            'scheduled_date'   => $data['scheduled_date'] ?? null,
+            'supervisor_notes' => $data['supervisor_notes'] ?? null,
+            'status'           => 'in_progress',
+            'current_step'     => ($report->progress_percentage ?? 0) > 0 ? self::STEP['pengerjaan'] : self::STEP['persiapan'],
+        ])->save();
 
-public function progres(Request $request, Report $report)
-{
-    $this->pastikanInfrastruktur($report);
-    abort_unless($report->status === 'in_progress', 422);
+        if ($pertamaKali) {
+            $jadwal = $report->scheduled_date
+                ? ' Jadwal pengerjaan: ' . \Carbon\Carbon::parse($report->scheduled_date)->translatedFormat('d F Y') . '.'
+                : '';
+            $report->catat('Petugas ditugaskan', 'Penanggung jawab: ' . $data['supervisor_name'] . '.' . $jadwal . ' Anda bisa menghubungi petugas dari halaman Laporan Saya.');
+        }
 
-    $data = $request->validate(['progress_percentage' => 'required|integer|min:0|max:99']);
+        return back()->with('success', 'Petugas ditugaskan. Laporan kini berstatus sedang dikerjakan.');
+    }
 
-    $report->forceFill([
-        'progress_percentage' => $data['progress_percentage'],
-        'current_step'        => $data['progress_percentage'] > 0 ? self::STEP['pengerjaan'] : self::STEP['persiapan'],
-    ])->save();
+    public function progres(Request $request, Report $report)
+    {
+        $this->pastikanInfrastruktur($report);
+        abort_unless($report->status === 'in_progress', 422);
 
-    return back()->with('success', 'Progres diperbarui menjadi ' . $data['progress_percentage'] . '%.');
-}
+        $data = $request->validate(['progress_percentage' => 'required|integer|min:0|max:99']);
+
+        $report->forceFill([
+            'progress_percentage' => $data['progress_percentage'],
+            'current_step'        => $data['progress_percentage'] > 0 ? self::STEP['pengerjaan'] : self::STEP['persiapan'],
+        ])->save();
+
+        // Progres tercatat di timeline, tapi tidak membunyikan lonceng supaya tidak berisik
+        $report->catat('Progres diperbarui', 'Capaian pengerjaan kini ' . $data['progress_percentage'] . '%.', notify: false);
+
+        return back()->with('success', 'Progres diperbarui menjadi ' . $data['progress_percentage'] . '%.');
+    }
 
     public function selesai(Request $request, Report $report)
     {
@@ -150,6 +164,8 @@ public function progres(Request $request, Report $report)
             'status'              => 'done',
             'current_step'        => self::STEP['done'],
         ])->save();
+
+        $report->catat('Perbaikan selesai', $data['completion_notes'], $path);
 
         return back()->with('success', 'Laporan selesai dan kini tampil di Dokumentasi Penanganan.');
     }

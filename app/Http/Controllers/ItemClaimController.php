@@ -16,6 +16,8 @@ class ItemClaimController extends Controller
     public function create($reportId)
     {
         $report = Report::barang()->findOrFail($reportId);
+abort_if($report->hidden_at, 404);
+        
         abort_if($report->user_id === Auth::id(), 403, 'Anda tidak bisa menanggapi laporan sendiri.');
 
         $existingClaim = ItemClaim::where('report_id', $report->id)
@@ -34,6 +36,7 @@ class ItemClaimController extends Controller
     public function store(Request $request, $reportId)
     {
         $report = Report::barang()->findOrFail($reportId);
+abort_if($report->hidden_at, 404);
         abort_if($report->user_id === Auth::id(), 403, 'Anda tidak bisa menanggapi laporan sendiri.');
         $hilang = $report->item_kind === 'kehilangan';
 

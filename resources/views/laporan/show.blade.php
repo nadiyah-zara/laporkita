@@ -1,70 +1,70 @@
 @php
-    $badge = [
-        'pending'     => ['Menunggu Verifikasi', 'bg-slate-100 text-slate-600'],
-        'verified'    => ['Perlu Diperbaiki', 'bg-amber-100 text-amber-800'],
-        'in_progress' => ['Sedang Diperbaiki', 'bg-amber-500 text-white'],
-        'done'        => ['Selesai', 'bg-emerald-100 text-emerald-700'],
-        'resolved'    => ['Selesai', 'bg-emerald-100 text-emerald-700'],
-        'rejected'    => ['Ditolak', 'bg-rose-100 text-rose-700'],
-    ];
-    [$statusLabel, $statusWarna] = $badge[$report->status] ?? [$report->status, 'bg-slate-100 text-slate-600'];
+$badge = [
+'pending' => ['Menunggu Verifikasi', 'bg-slate-100 text-slate-600'],
+'verified' => ['Perlu Diperbaiki', 'bg-amber-100 text-amber-800'],
+'in_progress' => ['Sedang Diperbaiki', 'bg-amber-500 text-white'],
+'done' => ['Selesai', 'bg-emerald-100 text-emerald-700'],
+'resolved' => ['Selesai', 'bg-emerald-100 text-emerald-700'],
+'rejected' => ['Ditolak', 'bg-rose-100 text-rose-700'],
+];
+[$statusLabel, $statusWarna] = $badge[$report->status] ?? [$report->status, 'bg-slate-100 text-slate-600'];
 
-    $url = fn ($path) => $path ? asset('storage/' . $path) : null;
-    $selesai = in_array($report->status, ['done', 'resolved']);
-    $persen = (int) ($selesai ? 100 : ($report->progress_percentage ?? 0));
+$url = fn ($path) => $path ? asset('storage/' . $path) : null;
+$selesai = in_array($report->status, ['done', 'resolved']);
+$persen = (int) ($selesai ? 100 : ($report->progress_percentage ?? 0));
 
-    $photos = is_array($report->photos) && count($report->photos) ? $report->photos : array_filter([$report->photo]);
+$photos = is_array($report->photos) && count($report->photos) ? $report->photos : array_filter([$report->photo]);
 
-    $progresList = [];
+$progresList = [];
 
-    // 1. Foto bukti dari warga
-    foreach (array_values($photos) as $i => $p) {
-        $progresList[] = [
-            'foto'    => $url($p),
-            'tahap'   => 'Bukti Warga (' . ($i + 1) . ')',
-            'judul'   => $i === 0 ? $report->title : 'Kondisi Kerusakan',
-            'tanggal' => $report->created_at->translatedFormat('d F Y'),
-            'catatan' => $i === 0 ? $report->description : 'Foto bukti visual dari pelapor untuk membantu penaksiran penanganan.',
-        ];
-    }
+// 1. Foto bukti dari warga
+foreach (array_values($photos) as $i => $p) {
+$progresList[] = [
+'foto' => $url($p),
+'tahap' => 'Bukti Warga (' . ($i + 1) . ')',
+'judul' => $i === 0 ? $report->title : 'Kondisi Kerusakan',
+'tanggal' => $report->created_at->translatedFormat('d F Y'),
+'catatan' => $i === 0 ? $report->description : 'Foto bukti visual dari pelapor untuk membantu penaksiran penanganan.',
+];
+}
 
-    // 2. Tahap pengerjaan (tanpa foto contoh)
-    if (in_array($report->status, ['in_progress', 'done', 'resolved']) && $report->supervisor_name) {
-        $progresList[] = [
-            'foto'    => null,
-            'ikon'    => '🛠️',
-            'tahap'   => 'Penanganan Lapangan',
-            'judul'   => 'Pengerjaan oleh ' . $report->supervisor_name,
-            'tanggal' => \Carbon\Carbon::parse($report->scheduled_date ?? $report->updated_at)->translatedFormat('d F Y'),
-            'catatan' => $selesai
-                ? 'Pengerjaan di lokasi telah dilakukan oleh petugas.'
-                : 'Pengerjaan sedang berlangsung. Progres saat ini ' . $persen . '%.',
-        ];
-    }
+// 2. Tahap pengerjaan (tanpa foto contoh)
+if (in_array($report->status, ['in_progress', 'done', 'resolved']) && $report->supervisor_name) {
+$progresList[] = [
+'foto' => null,
+'ikon' => '🛠️',
+'tahap' => 'Penanganan Lapangan',
+'judul' => 'Pengerjaan oleh ' . $report->supervisor_name,
+'tanggal' => \Carbon\Carbon::parse($report->scheduled_date ?? $report->updated_at)->translatedFormat('d F Y'),
+'catatan' => $selesai
+? 'Pengerjaan di lokasi telah dilakukan oleh petugas.'
+: 'Pengerjaan sedang berlangsung. Progres saat ini ' . $persen . '%.',
+];
+}
 
-    // 3. Hasil akhir
-    if ($selesai) {
-        $progresList[] = [
-            'foto'    => $url($report->photo_after),
-            'ikon'    => '✅',
-            'tahap'   => 'Hasil Akhir Tuntas',
-            'judul'   => 'Perbaikan Telah Selesai 100%',
-            'tanggal' => $report->updated_at->translatedFormat('d F Y'),
-            'catatan' => $report->completion_notes ?: 'Perbaikan telah selesai dilakukan.',
-        ];
-    }
+// 3. Hasil akhir
+if ($selesai) {
+$progresList[] = [
+'foto' => $url($report->photo_after),
+'ikon' => '✅',
+'tahap' => 'Hasil Akhir Tuntas',
+'judul' => 'Perbaikan Telah Selesai 100%',
+'tanggal' => $report->updated_at->translatedFormat('d F Y'),
+'catatan' => $report->completion_notes ?: 'Perbaikan telah selesai dilakukan.',
+];
+}
 
-    // Cadangan bila belum ada satu pun
-    if (empty($progresList)) {
-        $progresList[] = [
-            'foto'    => null,
-            'ikon'    => '📋',
-            'tahap'   => 'Laporan Masuk',
-            'judul'   => $report->title,
-            'tanggal' => $report->created_at->translatedFormat('d F Y'),
-            'catatan' => $report->description ?: 'Menunggu tinjauan tim.',
-        ];
-    }
+// Cadangan bila belum ada satu pun
+if (empty($progresList)) {
+$progresList[] = [
+'foto' => null,
+'ikon' => '📋',
+'tahap' => 'Laporan Masuk',
+'judul' => $report->title,
+'tanggal' => $report->created_at->translatedFormat('d F Y'),
+'catatan' => $report->description ?: 'Menunggu tinjauan tim.',
+];
+}
 @endphp
 
 <x-public-layout title="Detail Laporan {{ $report->ticket_code }} - LaporKita">
@@ -100,10 +100,10 @@
 
                 {{-- ALASAN PENOLAKAN (hanya terlihat pemilik/admin) --}}
                 @if ($report->status === 'rejected')
-                    <div class="mt-5 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-xs">
-                        <p class="font-bold text-rose-700">Laporan ini ditolak</p>
-                        <p class="mt-1 text-rose-600">Alasan: {{ $report->admin_note ?? '-' }}</p>
-                    </div>
+                <div class="mt-5 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-xs">
+                    <p class="font-bold text-rose-700">Laporan ini ditolak</p>
+                    <p class="mt-1 text-rose-600">Alasan: {{ $report->admin_note ?? '-' }}</p>
+                </div>
                 @endif
 
                 {{-- KARTU PETUGAS (hanya pelapor & admin) --}}
@@ -124,12 +124,37 @@
                         <h3 class="text-xl font-extrabold text-[#0c203b]">Progres</h3>
                         <div class="flex items-center gap-1 text-xs font-bold {{ $persen >= 100 ? 'text-emerald-600' : 'text-blue-600' }}">
                             @if ($persen >= 100)
-                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
-                                </svg>
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                            </svg>
                             @endif
                             <span>{{ $persen }}%</span>
                         </div>
+                    </div>
+
+                    {{-- TIMELINE & WORKLOG --}}
+                    <div id="timeline" class="mt-8 border-t border-slate-100 pt-6">
+                        <h3 class="text-xl font-extrabold text-[#0c203b]">Timeline & Worklog</h3>
+
+                        <ol class="mt-5 space-y-6 border-l-2 border-blue-100 pl-6">
+                            @forelse ($report->logs->sortByDesc('created_at') as $log)
+                            <li class="relative">
+                                <span class="absolute -left-[31px] top-1 h-3 w-3 rounded-full bg-blue-600 ring-4 ring-white"></span>
+                                <p class="text-[11px] font-medium text-slate-400">{{ $log->created_at->timezone('Asia/Jakarta')->translatedFormat('d F Y, H:i') }} WIB</p>
+                                <p class="text-sm font-bold text-[#0c203b]">{{ $log->title }}</p>
+                                @if ($log->note)
+                                <p class="mt-1 text-xs leading-relaxed text-slate-600">{{ $log->note }}</p>
+                                @endif
+                                @if ($log->photo)
+                                <a href="{{ asset('storage/' . $log->photo) }}" target="_blank">
+                                    <img src="{{ asset('storage/' . $log->photo) }}" alt="Foto" loading="lazy" class="mt-2 h-32 w-auto rounded-xl border border-slate-200 object-cover">
+                                </a>
+                                @endif
+                            </li>
+                            @empty
+                            <li class="text-xs text-slate-400">Belum ada catatan.</li>
+                            @endforelse
+                        </ol>
                     </div>
 
                     <div class="mt-3 h-2.5 w-full overflow-hidden rounded-full bg-blue-100/60">
@@ -167,11 +192,15 @@
 
                             <div class="mt-3 flex items-center gap-3">
                                 <button type="button" @click="prev()" class="rounded-full bg-slate-100 p-1.5 text-slate-600 hover:bg-slate-200">
-                                    <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg>
+                                    <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                                    </svg>
                                 </button>
                                 <span class="text-[11px] font-bold text-slate-400"><span x-text="activeIdx + 1"></span> / <span x-text="items.length"></span> Tahap</span>
                                 <button type="button" @click="next()" class="rounded-full bg-slate-100 p-1.5 text-slate-600 hover:bg-slate-200">
-                                    <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
+                                    <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                                    </svg>
                                 </button>
                             </div>
                             <p class="mt-0.5 text-[10px] text-slate-400">(Klik foto untuk berganti)</p>
