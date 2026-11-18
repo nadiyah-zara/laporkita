@@ -17,6 +17,7 @@ use App\Http\Controllers\Admin\KategoriController;
 use App\Http\Controllers\Admin\PenggunaController;
 use App\Http\Controllers\Admin\RekapController;
 use App\Http\Controllers\Admin\ProfilController;
+use App\Http\Controllers\Auth\AdminLoginController;
 
 // ==========================================================
 // 1. RUTE PUBLIK (BISA DILIHAT OLEH UMUM / TANPA LOGIN)
@@ -43,11 +44,10 @@ Route::get('/lapor-barang-hilang', [ReportController::class, 'indexBarang'])
 Route::get('/dokumentasi-penanganan', [DokumentasiController::class, 'index'])
     ->name('dokumentasi.index');
 
-Route::get('/dashboard', function () {
-    return auth()->user()->role === 'admin'
-        ? redirect()->route('admin.dashboard')
-        : redirect()->route('beranda');
-})->middleware(['auth'])->name('dashboard');
+Route::get('/petugas/kamera/{ticket}/{token}', [App\Http\Controllers\PetugasLapangController::class, 'showCamera'])
+    ->name('petugas.kamera.show');
+Route::post('/petugas/kamera/{ticket}/{token}', [App\Http\Controllers\PetugasLapangController::class, 'storeUpdate'])
+    ->name('petugas.kamera.store');
 
 // ==========================================================
 // 2. RUTE PRIBADI (WAJIB LOGIN)
@@ -103,7 +103,7 @@ Route::middleware('auth')->group(function () {
     // Foto 4 Action: Simpan Kesepakatan COD Pengambilan Barang
     Route::post('/lapor-barang-hilang/aktivitas-klaim/{claim_id}/kesepakatan', [ItemClaimController::class, 'simpanKesepakatan'])
         ->name('barang.klaim.kesepakatan');
-        
+
     // Action Verifikasi Scan QR Serah Terima Selesai (Step 5 -> Step 6)
     Route::get('/lapor-barang-hilang/aktivitas-klaim/{claim}/konfirmasi-serah-terima', [ItemClaimController::class, 'konfirmasi'])
         ->name('barang.klaim.konfirmasi');
@@ -111,6 +111,11 @@ Route::middleware('auth')->group(function () {
         ->name('barang.klaim.verifikasi');
     Route::post('/lapor-barang-hilang/aktivitas-klaim/{claim}/tolak-berkas', [ItemClaimController::class, 'tolakBerkas'])
         ->name('barang.klaim.tolak');
+
+    Route::post('/lapor-barang-hilang/aktivitas-klaim/{claim}/qr', [ItemClaimController::class, 'tampilkanQr'])
+        ->name('barang.klaim.qr');
+    Route::post('/lapor-barang-hilang/aktivitas-klaim/{claim}/qr-reset', [ItemClaimController::class, 'resetQr'])
+        ->name('barang.klaim.qr.reset');
 
     // =========NOTIFIKASI (BISA DIBACA OLEH PEMILIK LAPORAN & PEMILIK KLAIM)==========
     Route::post('/notifikasi/log/{log}/baca', [NotifikasiController::class, 'logBaca'])->name('notifikasi.log.baca');
@@ -129,43 +134,54 @@ Route::middleware('auth')->prefix('laporan-barang/saya')->group(function () {
         ->name('laporan.barang.tanggapan.berkas');
 });
 
-Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
+Route::prefix('panel-x7k2')->name('admin.')->group(function () {
+    // halaman login admin (publik, tapi di path rahasia)
+    Route::get('/masuk', [AdminLoginController::class, 'show'])->name('login');
+    Route::post('/masuk', [AdminLoginController::class, 'store'])->name('login.store');
 
-    // Laporan infrastruktur
-    Route::prefix('laporan-infrastruktur')->name('infrastruktur.')->group(function () {
-        Route::get('/', [LaporanInfrastrukturController::class, 'index'])->name('index');
-        Route::get('/{report}', [LaporanInfrastrukturController::class, 'show'])->name('show');
-        Route::post('/{report}/verifikasi', [LaporanInfrastrukturController::class, 'verifikasi'])->name('verifikasi');
-        Route::post('/{report}/tolak', [LaporanInfrastrukturController::class, 'tolak'])->name('tolak');
-        Route::post('/{report}/tugaskan', [LaporanInfrastrukturController::class, 'tugaskan'])->name('tugaskan');
-        Route::post('/{report}/progres', [LaporanInfrastrukturController::class, 'progres'])->name('progres');
-        Route::post('/{report}/selesai', [LaporanInfrastrukturController::class, 'selesai'])->name('selesai');
+    // halaman admin (dijaga)
+    Route::middleware(['auth', 'admin'])->group(function () {
+        Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
+
+        // Laporan infrastruktur
+        Route::prefix('laporan-infrastruktur')->name('infrastruktur.')->group(function () {
+            Route::get('/', [LaporanInfrastrukturController::class, 'index'])->name('index');
+            Route::get('/{report}', [LaporanInfrastrukturController::class, 'show'])->name('show');
+            Route::post('/{report}/verifikasi', [LaporanInfrastrukturController::class, 'verifikasi'])->name('verifikasi');
+            Route::post('/{report}/tolak', [LaporanInfrastrukturController::class, 'tolak'])->name('tolak');
+            Route::post('/{report}/tugaskan', [LaporanInfrastrukturController::class, 'tugaskan'])->name('tugaskan');
+            Route::post('/{report}/progres', [LaporanInfrastrukturController::class, 'progres'])->name('progres');
+            Route::post('/{report}/selesai', [LaporanInfrastrukturController::class, 'selesai'])->name('selesai');
+        });
+
+        // Barang hilang (moderasi)
+        Route::prefix('barang-hilang')->name('barang.')->group(function () {
+            Route::get('/', [LaporanBarangController::class, 'index'])->name('index');
+            Route::get('/{report}', [LaporanBarangController::class, 'show'])->name('show');
+            Route::post('/{report}/sembunyikan', [LaporanBarangController::class, 'sembunyikan'])->name('sembunyikan');
+            Route::post('/{report}/pulihkan', [LaporanBarangController::class, 'pulihkan'])->name('pulihkan');
+        });
+
+        // Kategori
+        Route::resource('kategori', KategoriController::class)->only(['index', 'store', 'update', 'destroy']);
+
+        // Pengguna
+        Route::get('/pengguna', [PenggunaController::class, 'index'])->name('pengguna.index');
+        Route::post('/pengguna/{user}/blokir', [PenggunaController::class, 'blokir'])->name('pengguna.blokir');
+        Route::post('/pengguna/{user}/buka', [PenggunaController::class, 'buka'])->name('pengguna.buka');
+
+        // Rekap
+        Route::get('/rekap', [RekapController::class, 'index'])->name('rekap.index');
+        Route::get('/rekap/ekspor', [RekapController::class, 'ekspor'])->name('rekap.ekspor');
+
+        // Profil admin
+        Route::get('/profil', [ProfilController::class, 'edit'])->name('profil.edit');
+        Route::patch('/profil', [ProfilController::class, 'update'])->name('profil.update');
+        Route::put('/profil/password', [ProfilController::class, 'password'])->name('profil.password');
+
+        //Petugas
+        Route::get('/petugas/kamera/{ticket}/{token}', [App\Http\Controllers\PetugasLapangController::class, 'showCamera'])->name('petugas.kamera.show');
+        Route::post('/petugas/kamera/{ticket}/{token}', [App\Http\Controllers\PetugasLapangController::class, 'storeUpdate'])->name('petugas.kamera.store');
     });
-
-    // Barang hilang (moderasi)
-    Route::prefix('barang-hilang')->name('barang.')->group(function () {
-        Route::get('/', [LaporanBarangController::class, 'index'])->name('index');
-        Route::get('/{report}', [LaporanBarangController::class, 'show'])->name('show');
-        Route::post('/{report}/sembunyikan', [LaporanBarangController::class, 'sembunyikan'])->name('sembunyikan');
-        Route::post('/{report}/pulihkan', [LaporanBarangController::class, 'pulihkan'])->name('pulihkan');
-    });
-
-    // Kategori
-    Route::resource('kategori', KategoriController::class)->only(['index', 'store', 'update', 'destroy']);
-
-    // Pengguna
-    Route::get('/pengguna', [PenggunaController::class, 'index'])->name('pengguna.index');
-    Route::post('/pengguna/{user}/blokir', [PenggunaController::class, 'blokir'])->name('pengguna.blokir');
-    Route::post('/pengguna/{user}/buka', [PenggunaController::class, 'buka'])->name('pengguna.buka');
-
-    // Rekap
-    Route::get('/rekap', [RekapController::class, 'index'])->name('rekap.index');
-    Route::get('/rekap/ekspor', [RekapController::class, 'ekspor'])->name('rekap.ekspor');
-
-    // Profil admin
-    Route::get('/profil', [ProfilController::class, 'edit'])->name('profil.edit');
-    Route::patch('/profil', [ProfilController::class, 'update'])->name('profil.update');
-    Route::put('/profil/password', [ProfilController::class, 'password'])->name('profil.password');
 });
 require __DIR__ . '/auth.php';

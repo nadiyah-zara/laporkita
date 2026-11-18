@@ -9,8 +9,17 @@ use Illuminate\Http\Request;
 
 class LaporanInfrastrukturController extends Controller
 {
-    // Sesuai stepper warga: 1 Dilaporkan, 2 Survey Tim, 3 Diverifikasi, 4 Persiapan, 5 Pengerjaan, 6 Selesai
-    private const STEP = ['pending' => 1, 'verified' => 3, 'persiapan' => 4, 'pengerjaan' => 5, 'done' => 6];
+    // 6 Tahapan Sesuai Desain:
+    // 1 Dilaporkan, 2 Survey Tim, 3 Diverifikasi, 4 Persiapan, 5 Pengerjaan, 6 Selesai
+    private const STEP = [
+        'pending'     => 1,
+        'survey'      => 2,
+        'verified'    => 3,
+        'persiapan'   => 4,
+        'pengerjaan'  => 5,
+        'done'        => 6,
+    ];
+
     public function index(Request $request)
     {
         $status = $request->query('status', 'semua');
@@ -56,7 +65,7 @@ class LaporanInfrastrukturController extends Controller
     public function show(Report $report)
     {
         $this->pastikanInfrastruktur($report);
-        $report->load(['category', 'user']);
+        $report->load(['category', 'user', 'logs']);
 
         return view('admin.infrastruktur.show', compact('report'));
     }
@@ -66,10 +75,14 @@ class LaporanInfrastrukturController extends Controller
         $this->pastikanInfrastruktur($report);
         abort_unless($report->status === 'pending', 422);
 
-        $report->forceFill(['status' => 'verified', 'current_step' => self::STEP['verified']])->save();
-        $report->catat('Laporan diverifikasi', 'Laporan Anda sudah diperiksa admin dan akan segera ditindaklanjuti.');
+        $report->forceFill([
+            'status'       => 'verified', 
+            'current_step' => self::STEP['verified']
+        ])->save();
 
-        return back()->with('success', 'Laporan diverifikasi. Silakan tugaskan petugas.');
+        $report->catat('Laporan diverifikasi', 'Laporan Anda sudah diverifikasi oleh admin dinas dan siap dijadwalkan pengerjaannya.');
+
+        return back()->with('success', 'Laporan diverifikasi. Silakan tugaskan pengawas dan tim lapangan.');
     }
 
     public function tolak(Request $request, Report $report)
@@ -82,7 +95,11 @@ class LaporanInfrastrukturController extends Controller
             ['admin_note.required' => 'Alasan penolakan wajib diisi.']
         );
 
-        $report->forceFill(['status' => 'rejected', 'admin_note' => $data['admin_note']])->save();
+        $report->forceFill([
+            'status'     => 'rejected', 
+            'admin_note' => $data['admin_note']
+        ])->save();
+
         $report->catat('Laporan ditolak', $data['admin_note']);
 
         return back()->with('success', 'Laporan ditolak.');
@@ -103,7 +120,10 @@ class LaporanInfrastrukturController extends Controller
             'supervisor_phone.required' => 'Nomor HP petugas wajib diisi agar pelapor bisa menghubungi.',
         ]);
 
-        $pertamaKali = $report->status === 'verified';
+        $pertamaKali = ($report->status === 'verified');
+        $stepSekarang = ($report->progress_percentage ?? 0) > 0 
+            ? self::STEP['pengerjaan'] 
+            : self::STEP['persiapan'];
 
         $report->forceFill([
             'supervisor_name'  => $data['supervisor_name'],
@@ -111,17 +131,17 @@ class LaporanInfrastrukturController extends Controller
             'scheduled_date'   => $data['scheduled_date'] ?? null,
             'supervisor_notes' => $data['supervisor_notes'] ?? null,
             'status'           => 'in_progress',
-            'current_step'     => ($report->progress_percentage ?? 0) > 0 ? self::STEP['pengerjaan'] : self::STEP['persiapan'],
+            'current_step'     => $stepSekarang,
         ])->save();
 
         if ($pertamaKali) {
             $jadwal = $report->scheduled_date
-                ? ' Jadwal pengerjaan: ' . \Carbon\Carbon::parse($report->scheduled_date)->translatedFormat('d F Y') . '.'
+                ? ' Target jadwal: ' . \Carbon\Carbon::parse($report->scheduled_date)->translatedFormat('d F Y') . '.'
                 : '';
-            $report->catat('Petugas ditugaskan', 'Penanggung jawab: ' . $data['supervisor_name'] . '.' . $jadwal . ' Anda bisa menghubungi petugas dari halaman Laporan Saya.');
+            $report->catat('Petugas ditugaskan', 'Pengawas: ' . $data['supervisor_name'] . '.' . $jadwal . ' Kontak petugas tersedia di rincian laporan.');
         }
 
-        return back()->with('success', 'Petugas ditugaskan. Laporan kini berstatus sedang dikerjakan.');
+        return back()->with('success', 'Petugas ditugaskan. Laporan kini dalam status persiapan/pengerjaan.');
     }
 
     public function progres(Request $request, Report $report)
@@ -133,11 +153,10 @@ class LaporanInfrastrukturController extends Controller
 
         $report->forceFill([
             'progress_percentage' => $data['progress_percentage'],
-            'current_step'        => $data['progress_percentage'] > 0 ? self::STEP['pengerjaan'] : self::STEP['persiapan'],
+            'current_step'        => self::STEP['pengerjaan'],
         ])->save();
 
-        // Progres tercatat di timeline, tapi tidak membunyikan lonceng supaya tidak berisik
-        $report->catat('Progres diperbarui', 'Capaian pengerjaan kini ' . $data['progress_percentage'] . '%.', notify: false);
+        $report->catat('Progres diperbarui', 'Capaian pengerjaan lapangan mencapai ' . $data['progress_percentage'] . '%.', notify: false);
 
         return back()->with('success', 'Progres diperbarui menjadi ' . $data['progress_percentage'] . '%.');
     }
@@ -151,8 +170,8 @@ class LaporanInfrastrukturController extends Controller
             'photo_after'      => 'required|image|mimes:jpeg,png,jpg,webp|max:10240',
             'completion_notes' => 'required|string|max:1000',
         ], [
-            'photo_after.required'      => 'Foto hasil pengerjaan wajib diunggah.',
-            'completion_notes.required' => 'Catatan penyelesaian wajib diisi.',
+            'photo_after.required'      => 'Foto hasil akhir pengerjaan wajib diunggah.',
+            'completion_notes.required' => 'Rincian penyelesaian pengerjaan wajib diisi.',
         ]);
 
         $path = $request->file('photo_after')->store('reports/after', 'public');
@@ -165,9 +184,10 @@ class LaporanInfrastrukturController extends Controller
             'current_step'        => self::STEP['done'],
         ])->save();
 
+        // Mencatat log selesai dengan foto perbaikan
         $report->catat('Perbaikan selesai', $data['completion_notes'], $path);
 
-        return back()->with('success', 'Laporan selesai dan kini tampil di Dokumentasi Penanganan.');
+        return back()->with('success', 'Laporan berhasil diselesaikan. Foto Sebelum vs Sesudah kini tampil di publik.');
     }
 
     private function pastikanInfrastruktur(Report $report): void

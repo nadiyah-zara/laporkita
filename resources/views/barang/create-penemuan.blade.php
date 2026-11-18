@@ -37,12 +37,12 @@
 
                         <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
                             <div>
-                                <label class="block text-xs font-bold text-slate-800">Nama Barang <span class="text-rose-500">*</span></label>
+                                <label class="block text-xs font-bold text-slate-800">Nama Barang <span class="text-rose-500"></span></label>
                                 <input type="text" name="title" value="{{ old('title') }}" required placeholder="Sebutkan nama barang secara umum" class="mt-1.5 block w-full rounded-xl border border-slate-200 bg-[#f0f4ff]/40 p-3.5 text-xs text-slate-800 focus:border-blue-600 focus:bg-white focus:outline-none">
                                 <p class="mt-1 text-[10px] text-slate-400">Tuliskan nama benda tanpa memberi tahu bentuk secara spesifik.</p>
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-slate-800">Kategori Barang <span class="text-rose-500">*</span></label>
+                                <label class="block text-xs font-bold text-slate-800">Kategori Barang <span class="text-rose-500"></span></label>
                                 <select name="category_id" required class="mt-1.5 block w-full rounded-xl border border-slate-200 bg-[#f0f4ff]/40 p-3.5 text-xs text-slate-800 focus:border-blue-600 focus:bg-white focus:outline-none">
                                     <option value="">Pilih Kategori Barang</option>
                                     @foreach ($categories as $cat)
@@ -53,38 +53,15 @@
                         </div>
 
                         <div class="mt-4">
-                            <label class="block text-xs font-bold text-slate-800">Deskripsi & Ciri-Ciri Khusus <span class="text-rose-500">*</span></label>
+                            <label class="block text-xs font-bold text-slate-800">Deskripsi & Ciri-Ciri Khusus <span class="text-rose-500"></span></label>
                             <textarea name="description" rows="3" required placeholder="Sebutkan ciri spesifik seperti warna khas, stiker, nomor seri (jika ada), goresan/cacat unik, atau isi di dalam dompet/tas..." class="mt-1.5 block w-full rounded-xl border border-slate-200 bg-[#f0f4ff]/40 p-3.5 text-xs text-slate-800 focus:border-blue-600 focus:bg-white focus:outline-none">{{ old('description') }}</textarea>
-                            <p class="mt-1 text-[10px] text-amber-600">💡 Tips: Jangan sebutkan PIN, kode keamanan, atau nominal uang tunai spesifik demi menjaga keabsahan verifikasi pemilik sah nantinya.</p>
+                            <p class="mt-1 text-[10px] text-amber-600">Tips: Jangan sebutkan PIN, kode keamanan, atau nominal uang tunai spesifik demi menjaga keabsahan verifikasi pemilik sah nantinya.</p>
                         </div>
                     </div>
 
                     {{-- 2. WAKTU & LOKASI DENGAN GPS REAL-TIME (SESUAI GAMBAR) --}}
                     <div class="border-t border-slate-100 pt-6"
-                        x-data="{
-        gettingLocation: false,
-        lat: '{{ old('latitude', '-6.175392') }}',
-        lng: '{{ old('longitude', '106.827153') }}',
-        getLocation() {
-            this.gettingLocation = true;
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    (pos) => {
-                        this.lat = pos.coords.latitude.toFixed(6);
-                        this.lng = pos.coords.longitude.toFixed(6);
-                        this.gettingLocation = false;
-                    },
-                    (err) => {
-                        alert('Gagal mendeteksi lokasi: ' + err.message);
-                        this.gettingLocation = false;
-                    }
-                );
-            } else {
-                alert('Browser tidak mendukung deteksi lokasi.');
-                this.gettingLocation = false;
-            }
-        }
-     }">
+                        >
                         <div class="flex items-center gap-2 text-sm font-bold text-[#0c203b]">
                             <svg class="h-4 w-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -94,63 +71,22 @@
 
                         <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
                             <div>
-                                <label class="block text-xs font-bold text-slate-800">Tanggal Kejadian <span class="text-rose-500">*</span></label>
+                                <label class="block text-xs font-bold text-slate-800">Tanggal Kejadian <span class="text-rose-500"></span></label>
                                 <input type="date" name="event_date" value="{{ old('event_date', date('Y-m-d')) }}" required class="mt-1.5 block w-full rounded-xl border border-slate-200 bg-[#f0f4ff]/40 p-3.5 text-xs text-slate-800 focus:border-blue-600 focus:bg-white focus:outline-none">
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-slate-800">Perkiraan Jam Kejadian <span class="text-rose-500">*</span></label>
+                                <label class="block text-xs font-bold text-slate-800">Perkiraan Jam Kejadian <span class="text-rose-500"></span></label>
                                 <input type="time" name="event_time" value="{{ old('event_time') }}" class="mt-1.5 block w-full rounded-xl border border-slate-200 bg-[#f0f4ff]/40 p-3.5 text-xs text-slate-800 focus:border-blue-600 focus:bg-white focus:outline-none">
                             </div>
                         </div>
 
                         <div class="mt-4">
-                            <label class="block text-xs font-bold text-slate-800">Alamat Patokan / Landmark Detail <span class="text-rose-500">*</span></label>
+                            <label class="block text-xs font-bold text-slate-800">Alamat Patokan / Landmark Detail <span class="text-rose-500"></span></label>
                             <input type="text" name="address" value="{{ old('address') }}" required placeholder="Misal: Di bangku tunggu Halte Transjakarta Harmoni Koridor 1, dekat pintu masuk barat" class="mt-1.5 block w-full rounded-xl border border-slate-200 bg-[#f0f4ff]/40 p-3.5 text-xs text-slate-800 focus:border-blue-600 focus:bg-white focus:outline-none">
                         </div>
 
                         {{-- MAPS SATELIT INTERAKTIF DENGAN TOMBOL DETEKSI GPS --}}
-                        <div class="mt-4">
-                            <div class="flex items-center justify-between text-xs font-bold text-slate-800 mb-2">
-                                <span>Tentukan Titik Koordinat GPS pada Peta</span>
-                                <button type="button" @click="getLocation()" :disabled="gettingLocation" class="inline-flex items-center gap-1.5 text-blue-600 hover:text-blue-700 disabled:opacity-50">
-                                    <svg class="h-3.5 w-3.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <circle cx="12" cy="12" r="10" />
-                                        <circle cx="12" cy="12" r="3" />
-                                        <circle cx="12" cy="12" r="1" />
-                                    </svg>
-                                    <span x-text="gettingLocation ? 'Mencari Titik...' : 'Gunakan Lokasi Saat Ini'"></span>
-                                </button>
-                            </div>
-
-                            {{-- Container Peta Satelit --}}
-                            <div class="relative h-48 w-full overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 shadow-inner">
-                                {{-- Iframe Satelit Otomatis Bergeser Sesuai GPS --}}
-                                <iframe class="h-full w-full pointer-events-none opacity-90"
-                                    :src="'https://maps.google.com/maps?q=' + lat + ',' + lng + '&t=k&z=17&ie=UTF8&iwloc=&output=embed'">
-                                </iframe>
-
-                                {{-- Pin Merah + Balon Tooltip di Tengah (Sesuai Foto Desain) --}}
-                                <div class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center -mt-4">
-                                    <div class="mb-1 rounded-full bg-white/95 px-3 py-1 text-[10px] font-semibold text-slate-800 shadow-md border border-slate-200">
-                                        Geser peta untuk menentukan titik akurat
-                                    </div>
-                                    <div class="text-rose-600 drop-shadow-md">
-                                        <svg class="h-7 w-7" fill="currentColor" viewBox="0 0 24 24">
-                                            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 110-5 2.5 2.5 0 010 5z" />
-                                        </svg>
-                                    </div>
-                                </div>
-
-                                {{-- Label Koordinat Terkunci di Pojok Kiri Bawah --}}
-                                <div class="absolute bottom-2 left-2 rounded-lg bg-slate-900/80 px-3 py-1 font-mono text-[10px] text-white shadow-sm backdrop-blur">
-                                    <span x-text="'Lat: ' + lat + ' | Long: ' + lng"></span>
-                                </div>
-                            </div>
-
-                            {{-- Hidden Input Koordinat untuk Dikirim ke Database --}}
-                            <input type="hidden" name="latitude" :value="lat">
-                            <input type="hidden" name="longitude" :value="lng">
-                        </div>
+                        <x-location-picker :lat="old('latitude')" :lng="old('longitude')" />
                     </div>
 
                     {{-- 3. WHATSAPP TERVERIFIKASI --}}
@@ -163,13 +99,13 @@
                         </div>
 
                         <div class="mt-4">
-                            <label class="block text-xs font-bold text-slate-800">Nomor WhatsApp Aktif Pelapor <span class="text-rose-500">*</span></label>
+                            <label class="block text-xs font-bold text-slate-800">Nomor WhatsApp Aktif Pelapor <span class="text-rose-500"></span></label>
                             <div class="mt-1.5 flex rounded-xl border border-slate-200 bg-[#f0f4ff]/40 overflow-hidden">
                                 <span class="flex items-center px-4 font-bold text-xs text-slate-600 bg-slate-100">+62</span>
                                 <input type="text" name="reporter_phone" value="{{ old('reporter_phone') }}" required placeholder="812-3456-7890" class="w-full p-3.5 text-xs text-slate-800 bg-transparent focus:outline-none">
                             </div>
                             <p class="mt-1.5 flex items-center gap-1 text-[10px] text-blue-600">
-                                🔒 Nomor Anda tidak akan ditampilkan ke publik. Sistem menggunakan link terproteksi untuk menghubungkan warga yang mengklaim.
+                                Nomor Anda tidak akan ditampilkan ke publik. Sistem menggunakan link terproteksi untuk menghubungkan warga yang mengklaim.
                             </p>
                         </div>
                     </div>

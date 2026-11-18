@@ -16,8 +16,8 @@ class ItemClaimController extends Controller
     public function create($reportId)
     {
         $report = Report::barang()->findOrFail($reportId);
-abort_if($report->hidden_at, 404);
-        
+        abort_if($report->hidden_at, 404);
+
         abort_if($report->user_id === Auth::id(), 403, 'Anda tidak bisa menanggapi laporan sendiri.');
 
         $existingClaim = ItemClaim::where('report_id', $report->id)
@@ -36,7 +36,7 @@ abort_if($report->hidden_at, 404);
     public function store(Request $request, $reportId)
     {
         $report = Report::barang()->findOrFail($reportId);
-abort_if($report->hidden_at, 404);
+        abort_if($report->hidden_at, 404);
         abort_if($report->user_id === Auth::id(), 403, 'Anda tidak bisa menanggapi laporan sendiri.');
         $hilang = $report->item_kind === 'kehilangan';
 
@@ -134,7 +134,7 @@ abort_if($report->hidden_at, 404);
         return back()->with('success', 'Kesepakatan berhasil dikonfirmasi! QR tiket telah terbit.');
     }
 
-    
+
     /**
      * Verifikasi Serah Terima Selesai (Hasil Scan QR Penemu) -> Step 6: Selesai
      */
@@ -196,5 +196,40 @@ abort_if($report->hidden_at, 404);
         ])->save();
 
         return back()->with('success', 'Berkas pelapor ditolak.');
+    }
+
+    /** Pemilik barang meminta QR. Hanya berhasil SEKALI. */
+    public function tampilkanQr(ItemClaim $claim)
+    {
+        $claim->load('report');
+
+        abort_unless($claim->ownerId() === (int) Auth::id(), 403);
+        abort_unless($claim->current_step == 5 && !$claim->rejected_at, 422, 'QR belum dapat ditampilkan.');
+
+        // Update atomik: hanya satu permintaan yang bisa lolos, meski tombol diklik dua kali
+        $berhasil = ItemClaim::where('id', $claim->id)
+            ->whereNull('qr_shown_at')
+            ->update(['qr_shown_at' => now()]);
+
+        if (!$berhasil) {
+            return response()->json([
+                'message' => 'QR sudah pernah ditampilkan dan tidak dapat dibuka lagi. Minta penemu mengizinkan tampil ulang bila ada kendala.',
+            ], 409);
+        }
+
+        return response()->json(['url' => route('barang.klaim.konfirmasi', $claim)]);
+    }
+
+    /** Penemu mengizinkan pemilik menampilkan QR sekali lagi (kalau layar mati, tertutup tidak sengaja, dll). */
+    public function resetQr(ItemClaim $claim)
+    {
+        $claim->load('report');
+
+        abort_unless($claim->finderId() === (int) Auth::id(), 403);
+        abort_unless($claim->current_step == 5 && !$claim->rejected_at, 422);
+
+        $claim->forceFill(['qr_shown_at' => null])->save();
+
+        return back()->with('success', 'Pemilik kini dapat menampilkan QR sekali lagi.');
     }
 }

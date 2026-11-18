@@ -16,7 +16,7 @@
             <p class="mt-0.5 text-slate-500">{{ $report->supervisor_phone }}</p>
             <a href="https://wa.me/{{ $waPetugas }}" target="_blank"
                 class="mt-3 inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700">
-                💬 Hubungi Petugas
+                Hubungi Petugas
             </a>
         @endif
     </div>

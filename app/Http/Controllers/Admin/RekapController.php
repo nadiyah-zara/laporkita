@@ -61,7 +61,7 @@ class RekapController extends Controller
         return response()->streamDownload(function () use ($tahun) {
             $out = fopen('php://output', 'w');
             fwrite($out, "\xEF\xBB\xBF"); // agar Excel membaca UTF-8
-            fputcsv($out, ['Kode Tiket', 'Jenis', 'Judul', 'Kategori', 'Status', 'Tanggal Masuk', 'Terakhir Diperbarui', 'Alamat', 'Petugas'], ';');
+            fputcsv($out, ['Kode Tiket', 'Jenis', 'Judul', 'Kategori', 'Status', 'Tanggal Masuk', 'Terakhir Diperbarui', 'Alamat', 'Petugas'], ',');
 
             Report::with('category')->whereNull('hidden_at')->whereYear('created_at', $tahun)
                 ->orderBy('created_at')->lazy()

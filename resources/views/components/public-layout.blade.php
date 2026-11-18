@@ -32,7 +32,7 @@
                         Beranda
                     </a>
 
-                    <a href="{{ route('peta.layanan') }}" class="{{ request()->routeIs('peta.layanan') ? 'text-slate-900' : 'text-slate-400 hover:text-slate-900' }}">
+                    <a href="{{ route('peta.layanan') }}" class="{{ request()->routeIs('peta.layanan') ? 'text-blue-600 font-bold' : 'text-slate-500 hover:text-slate-900' }}">
                         Peta Layanan
                     </a>
 
@@ -200,7 +200,7 @@
                         <svg class="h-4 w-4 shrink-0 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
                         </svg>
-                        <span>Layanan Publik Terverifikasi Resmi Pemerintah</span>
+                        <span>Project Mahasiswa</span>
                     </div>
                 </div>
 
@@ -234,13 +234,7 @@
                             <svg class="h-4 w-4 shrink-0 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
                             </svg>
-                            <a href="tel:112" class="font-bold text-slate-800 transition-colors hover:text-blue-600">112 (Bebas Pulsa 24 Jam)</a>
-                        </li>
-                        <li class="flex items-center gap-2.5">
-                            <svg class="h-4 w-4 shrink-0 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-                            </svg>
-                            <a href="mailto:pengaduan@laporkita.go.id" class="transition-colors hover:text-blue-600">pengaduan@laporkita.go.id</a>
+                            <a href="tel:112" class="font-bold text-slate-800 transition-colors hover:text-blue-600">+62 822-6717-7099</a>
                         </li>
                         <li class="flex items-center gap-2.5 text-xs text-slate-500">
                             <svg class="h-4 w-4 shrink-0 text-emerald-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -258,10 +252,6 @@
                 <p class="text-center sm:text-left">
                     &copy; {{ date('Y') }} LaporKita - Portal Pelayanan Publik & Pengaduan Terpadu.
                 </p>
-                <div class="flex flex-wrap items-center justify-center gap-6">
-                    <a href="#" class="transition-colors hover:text-blue-600">Kebijakan Privasi</a>
-                    <a href="#" class="transition-colors hover:text-blue-600">Syarat & Ketentuan</a>
-                </div>
             </div>
 
         </div>

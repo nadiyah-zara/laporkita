@@ -62,7 +62,7 @@
                 <div class="relative mx-auto h-[380px] w-full max-w-[460px] overflow-hidden rounded-3xl border border-white/80 bg-[#eaf2fa] p-4 shadow-2xl shadow-slate-900/15 backdrop-blur-md sm:h-[400px]">
 
                     {{-- GRID SIMULASI PETA DENGAN SATELIT IFRAME SESUAI TITIK TERBARU --}}
-                    @if ($laporanPetaHero && $laporanPetaHero->latitude && $laporanPetaHero->longitude)
+                    @if (isset($laporanPetaHero) && $laporanPetaHero?->latitude && $laporanPetaHero?->longitude)
                         <iframe class="absolute inset-0 h-full w-full pointer-events-none opacity-60" 
                                 src="https://maps.google.com/maps?q={{ $laporanPetaHero->latitude }},{{ $laporanPetaHero->longitude }}&t=m&z=14&output=embed">
                         </iframe>
@@ -447,16 +447,7 @@
                             Tim layanan masyarakat kami dapat dihubungi melalui pusat panggilan resmi terpadu:
                         </p>
 
-                        <a href="tel:112" class="group mt-4 flex items-center gap-3.5 rounded-xl border border-white/10 bg-white/[0.06] p-3.5 transition-all hover:bg-white/[0.12]">
-                            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white/10 text-white group-hover:bg-blue-600">
-                                <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
-                            </div>
-                            <div>
-                                <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">HOTLINE DARURAT NASIONAL</span>
-                                <span class="text-sm font-bold text-white sm:text-base">112 <span class="text-xs font-normal text-slate-300">(Bebas Pulsa 24 Jam)</span></span>
-                            </div>
-                        </a>
-
+                        
                         <a href="https://wa.me/6282267177099" target="_blank" rel="noopener noreferrer" class="group mt-3 flex items-center gap-3.5 rounded-xl border border-white/10 bg-white/[0.06] p-3.5 transition-all hover:bg-white/[0.12]">
                             <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white/10 text-white group-hover:bg-emerald-600">
                                 <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>

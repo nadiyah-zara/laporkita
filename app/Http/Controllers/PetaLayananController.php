@@ -8,14 +8,14 @@ use Illuminate\View\View;
 
 class PetaLayananController extends Controller
 {
-    /** Titik pusat peta (Politeknik Negeri Medan). Ganti sesuai kebutuhan. */
+    /** Titik pusat default (Politeknik Negeri Medan). */
     private const CENTER = ['lat' => 3.5617, 'lng' => 98.6568];
 
-    /** Pilihan radius (km) untuk tombol "Perluas Radar". */
+    /** Pilihan radius (km). */
     private const RADIUS_STEPS = [2.5, 5, 10, 25];
 
-    /** Layer yang tersedia. Yang pertama jadi default. */
-    private const LAYERS = ['barang', 'infrastruktur', 'semua'];
+    /** Default layer dibuat 'semua' agar semua laporan langsung muncul */
+    private const LAYERS = ['semua', 'infrastruktur', 'barang'];
 
     public function index(Request $request): View
     {
@@ -30,33 +30,59 @@ class PetaLayananController extends Controller
 
         $search = trim((string) $request->query('q', ''));
 
-        $reports = Report::query()
-            ->tayang()
-            ->withinRadius(self::CENTER['lat'], self::CENTER['lng'], $radius)
+        // Query laporan
+        $reportsQuery = Report::query()->tayang();
+
+        // Jika tidak sedang mencari teks spesifik, gunakan batas radius
+        if ($search === '') {
+            $reportsQuery->withinRadius(self::CENTER['lat'], self::CENTER['lng'], $radius);
+        } else {
+            // Jika mencari nama lokasi/laporan, cari di judul, deskripsi, dan alamat
+            $reportsQuery->where(function ($w) use ($search) {
+                $w->where('title', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhere('address', 'like', "%{$search}%");
+            });
+        }
+
+        $reports = $reportsQuery
             ->when($layer === 'barang', fn ($q) => $q->barang())
             ->when($layer === 'infrastruktur', fn ($q) => $q->infrastruktur())
-            ->when($search !== '', function ($q) use ($search) {
-                $q->where(function ($w) use ($search) {
-                    $w->where('title', 'like', "%{$search}%")
-                        ->orWhere('description', 'like', "%{$search}%")
-                        ->orWhere('address', 'like', "%{$search}%");
-                });
-            })
             ->latest()
             ->get();
 
-        $markers = $reports->map(fn (Report $r) => [
-            'id' => $r->id,
-            // ditemukan | dicari | infrastruktur
-            'type' => $r->type === 'infrastruktur' ? 'infrastruktur' : $r->item_kind,
-            'status' => $r->status,
-            'title' => $r->title,
-            'description' => $r->description,
-            'location' => $r->address,
-            'lat' => $r->latitude,
-            'lng' => $r->longitude,
-            'time' => $r->created_at->diffForHumans(),
-        ])->values();
+        // Tentukan pusat peta: jika ada hasil pencarian, pusatkan ke laporan pertama
+        $center = self::CENTER;
+        if ($search !== '' && $reports->isNotEmpty()) {
+            $center = [
+                'lat' => (float) $reports->first()->latitude,
+                'lng' => (float) $reports->first()->longitude,
+            ];
+        }
+
+        // Mapping marker dengan perbaikan type & penambahan url
+        $markers = $reports->map(function (Report $r) {
+            // Normalisasi tipe ke: 'infrastruktur', 'ditemukan', atau 'dicari'
+            $markerType = 'infrastruktur';
+            if ($r->type !== 'infrastruktur') {
+                $markerType = ($r->item_kind === 'penemuan') ? 'ditemukan' : 'dicari';
+            }
+
+            return [
+                'id' => $r->id,
+                'type' => $markerType,
+                'status' => $r->status,
+                'title' => $r->title,
+                'description' => $r->description,
+                'location' => $r->address,
+                'lat' => (float) $r->latitude,
+                'lng' => (float) $r->longitude,
+                'time' => $r->created_at->diffForHumans(),
+                'url' => $r->type === 'infrastruktur'
+                    ? route('laporan.infrastruktur.detail', $r->id)
+                    : route('laporan.barang.index'),
+            ];
+        })->values();
 
         $nextRadius = collect(self::RADIUS_STEPS)->first(fn ($r) => $r > $radius)
             ?? self::RADIUS_STEPS[0];
@@ -64,7 +90,7 @@ class PetaLayananController extends Controller
         return view('peta-layanan', [
             'reports' => $reports,
             'markers' => $markers,
-            'center' => self::CENTER,
+            'center' => $center,
             'layer' => $layer,
             'defaultLayer' => self::LAYERS[0],
             'search' => $search,

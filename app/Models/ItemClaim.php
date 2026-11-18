@@ -31,6 +31,7 @@ class ItemClaim extends Model
         'owner_verified_at'  => 'datetime',
         'finder_verified_at' => 'datetime',
         'claimant_seen_at'   => 'datetime',
+        'qr_shown_at' => 'datetime',
     ];
 
     public function report(): BelongsTo

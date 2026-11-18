@@ -12,13 +12,16 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        // Arahkan pengunjung yang belum login ke beranda sambil membuka modal login
-        $middleware->redirectGuestsTo(fn() => route('beranda', ['modal' => 'login']));
-        $middleware->alias([
-            'admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,
-        ]);
-        $middleware->appendToGroup('web', \App\Http\Middleware\EnsureUserNotBlocked::class);
-    })
+    $middleware->alias([
+        'admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,
+    ]);
+
+    $middleware->redirectGuestsTo(function ($request) {
+        return $request->is('panel-x7k2*')
+            ? route('admin.login')
+            : route('login');
+    });
+})
     ->withExceptions(function (Exceptions $exceptions) {
         //
     })->create();

@@ -23,7 +23,7 @@
             </div>
 
             <div>
-                <label class="text-sm font-medium text-slate-700">Nama Lengkap<span class="text-blue-600">*</span></label>
+                <label class="text-sm font-medium text-slate-700">Nama Lengkap<span class="text-blue-600"></span></label>
                 <input type="text" name="name" required
                        value="{{ old('_modal') === 'register' ? old('name') : '' }}"
                        placeholder="Nama Lengkap Sesuai Dengan KTP"
@@ -32,7 +32,7 @@
             </div>
 
             <div>
-                <label class="text-sm font-medium text-slate-700">Email<span class="text-blue-600">*</span></label>
+                <label class="text-sm font-medium text-slate-700">Email<span class="text-blue-600"></span></label>
                 <input type="email" name="email" required
                        value="{{ old('_modal') === 'register' ? old('email') : '' }}"
                        placeholder="Masukkan Email Anda"
@@ -41,7 +41,7 @@
             </div>
 
             <div x-data="{ show: false }">
-                <label class="text-sm font-medium text-slate-700">Kata Sandi<span class="text-blue-600">*</span></label>
+                <label class="text-sm font-medium text-slate-700">Kata Sandi<span class="text-blue-600"></span></label>
                 <div class="relative mt-1">
                     <input :type="show ? 'text' : 'password'" name="password" required
                            placeholder="Masukkan Kata Sandi"
@@ -52,7 +52,7 @@
             </div>
 
             <div x-data="{ show: false }">
-                <label class="text-sm font-medium text-slate-700">Ulang Kata Sandi<span class="text-blue-600">*</span></label>
+                <label class="text-sm font-medium text-slate-700">Ulang Kata Sandi<span class="text-blue-600"></span></label>
                 <div class="relative mt-1">
                     <input :type="show ? 'text' : 'password'" name="password_confirmation" required
                            placeholder="Masukkan Kata Sandi"
@@ -93,7 +93,7 @@
             <input type="hidden" name="_modal" value="login">
 
             <div>
-                <label class="text-sm font-medium text-slate-700">Email<span class="text-blue-600">*</span></label>
+                <label class="text-sm font-medium text-slate-700">Email<span class="text-blue-600"></span></label>
                 <input type="email" name="email" required
                        value="{{ old('_modal') === 'login' ? old('email') : '' }}"
                        placeholder="Masukkan Email Anda"
@@ -102,7 +102,7 @@
             </div>
 
             <div x-data="{ show: false }">
-                <label class="text-sm font-medium text-slate-700">Kata Sandi<span class="text-blue-600">*</span></label>
+                <label class="text-sm font-medium text-slate-700">Kata Sandi<span class="text-blue-600"></span></label>
                 <div class="relative mt-1">
                     <input :type="show ? 'text' : 'password'" name="password" required
                            placeholder="Masukkan Kata Sandi"

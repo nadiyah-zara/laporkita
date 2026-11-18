@@ -56,6 +56,15 @@ class LoginRequest extends FormRequest
                 'email' => 'Akun Anda diblokir oleh admin. Hubungi admin untuk informasi lebih lanjut.',
             ]);
         }
+        // Tolak admin di login biasa
+        if (Auth::user()->role === 'admin') {
+            Auth::logout();
+            RateLimiter::hit($this->throttleKey());
+
+            throw ValidationException::withMessages([
+                'email' => trans('auth.failed'),
+            ]);
+        }
 
         RateLimiter::clear($this->throttleKey());
     }

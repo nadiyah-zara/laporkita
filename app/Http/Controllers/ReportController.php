@@ -83,9 +83,9 @@ class ReportController extends Controller
             'title'          => 'required|string|max:255',
             'description'    => 'required|string',
             'address'        => 'required|string|max:255',
-            'latitude'       => 'nullable|numeric',
-            'longitude'      => 'nullable|numeric',
-            'photos'         => 'required|array|min:2',
+            'latitude'       => 'required|numeric|between:-90,90',
+            'longitude'      => 'required|numeric|between:-180,180',
+            'photos'         => 'required|array|min:2|max:5',
             'photos.*'       => 'image|mimes:jpeg,png,jpg,webp|max:10240',
             'reporter_name'  => 'required|string|max:150',
             'reporter_phone' => 'required|string|max:25',
@@ -93,19 +93,25 @@ class ReportController extends Controller
             'category_id.required'    => 'Silakan pilih kategori fasilitas.',
             'title.required'          => 'Judul laporan wajib diisi.',
             'description.required'    => 'Deskripsi kerusakan wajib diisi.',
-            'address.required'        => 'Titik lokasi/alamat kejadian wajib diisi.',
+            'address.required'        => 'Alamat / patokan lokasi wajib diisi.',
+            'latitude.required'       => 'Tentukan titik lokasi pada peta (cari nama tempat, gunakan lokasi saat ini, atau klik peta).',
+            'longitude.required'      => 'Tentukan titik lokasi pada peta.',
             'photos.required'         => 'Minimal unggah 2 foto bukti kerusakan.',
             'photos.min'              => 'Wajib mengunggah minimal 2 foto bukti kerusakan.',
+            'photos.max'              => 'Maksimal 5 foto.',
+            'photos.*.image'          => 'Berkas harus berupa gambar.',
+            'photos.*.mimes'          => 'Foto harus berformat JPG, PNG, atau WEBP.',
+            'photos.*.max'            => 'Ukuran tiap foto maksimal 10 MB.',
             'reporter_name.required'  => 'Nama lengkap pelapor wajib diisi.',
             'reporter_phone.required' => 'Nomor WhatsApp aktif wajib diisi.',
         ]);
+
         $uploadedPaths = [];
-        if ($request->hasFile('photos')) {
-            foreach ($request->file('photos') as $file) {
-                $uploadedPaths[] = $file->store('reports', 'public');
-            }
+        foreach ($request->file('photos') as $file) {
+            $uploadedPaths[] = $file->store('reports', 'public');
         }
-        Report::create([
+
+        $report = Report::create([
             'user_id'             => Auth::id(),
             'category_id'         => $validated['category_id'],
             'type'                => 'infrastruktur',
@@ -113,8 +119,8 @@ class ReportController extends Controller
             'urgency'             => $validated['urgency'],
             'description'         => $validated['description'],
             'address'             => $validated['address'],
-            'latitude'            => $request->latitude ?? -6.319452,
-            'longitude'           => $request->longitude ?? 106.865120,
+            'latitude'            => $validated['latitude'],
+            'longitude'           => $validated['longitude'],
             'photo'               => $uploadedPaths[0] ?? null,
             'photos'              => $uploadedPaths,
             'reporter_name'       => $validated['reporter_name'],
@@ -123,11 +129,11 @@ class ReportController extends Controller
             'progress_percentage' => 0,
             'current_step'        => 1,
         ]);
-        // ALUR OPSI 1: LANGSUNG KE HALAMAN LAPORAN SAYA (FOTO 4)
-        return redirect()->route('laporan.infrastruktur.saya')
-            ->with('success', 'Laporan Anda berhasil dikirim! Silakan pantau proses pengerjaannya di sini.');
-    }
 
+        $report->catat('Laporan dikirim', 'Laporan Anda diterima dan menunggu verifikasi admin.', notify: false);
+
+        return redirect()->route('laporan.infrastruktur.saya')->with('success', 'Laporan berhasil dikirim!');
+    }
     /**
      * Foto 3: Detail Laporan (#JL2611001)
      */
@@ -153,27 +159,56 @@ class ReportController extends Controller
      */
     public function sayaInfrastruktur(Request $request)
     {
-        // Hanya ambil laporan milik akun yang sedang login
-        $query = Report::infrastruktur()
-            ->where('user_id', Auth::id())
-            ->with('category')
-            ->latest();
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-        $reports = $query->get();
-        $categories = Category::where('type', 'infrastruktur')->get();
-        // Hitung statistik khusus akun user ini
-        $userReports = Report::infrastruktur()->where('user_id', Auth::id());
+        $userId = auth()->id();
+        $status = $request->query('status', '');
+        // 1. Query dasar laporan infrastruktur milik user login
+        $baseQuery = Report::infrastruktur()->where('user_id', $userId);
+        // 2. Hitung statistik untuk badge tab filter (Sesuai Desain)
         $stats = [
-            'total'       => (clone $userReports)->count(),
-            'in_progress' => (clone $userReports)->where('status', 'in_progress')->count(),
-            'pending'     => (clone $userReports)->where('status', 'pending')->count(),
-            'verified'    => (clone $userReports)->where('status', 'verified')->count(),
-            'resolved'    => (clone $userReports)->whereIn('status', ['done', 'resolved'])->count(),
+            'total'       => (clone $baseQuery)->count(),
+            'pending'     => (clone $baseQuery)->where('status', 'pending')->count(),
+            'verified'    => (clone $baseQuery)->where('status', 'verified')->count(),
+            'in_progress' => (clone $baseQuery)->where('status', 'in_progress')->count(),
+            'resolved'    => (clone $baseQuery)->whereIn('status', ['done', 'resolved'])->count(),
+            'rejected'    => (clone $baseQuery)->where('status', 'rejected')->count(),
         ];
-        return view('laporan.my-reports', compact('reports', 'categories', 'stats'));
+        // 3. Query dengan relasi kategori dan timeline logs
+        $query = (clone $baseQuery)->with(['category', 'logs']);
+        // Filter berdasarkan status yang diklik di tab
+        if ($status !== '') {
+            if ($status === 'resolved') {
+                $query->whereIn('status', ['done', 'resolved']);
+            } else {
+                $query->where('status', $status);
+            }
+        }
+        // Fitur Pencarian (Judul, Tiket, atau Alamat)
+        if ($search = trim((string) $request->query('search'))) {
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                    ->orWhere('ticket_code', 'like', "%{$search}%")
+                    ->orWhere('address', 'like', "%{$search}%");
+            });
+        }
+        // Filter Dropdown Kategori
+        if ($cat = $request->query('category_id')) {
+            $query->where('category_id', $cat);
+        }
+        // Pengurutan (Terbaru / Terlama)
+        $reports = $request->query('sort') === 'terlama'
+            ? $query->oldest()->paginate(10)->withQueryString()
+            : $query->latest()->paginate(10)->withQueryString();
+        if (view()->exists('laporan.my-reports')) {
+            return view('laporan.my-reports', compact('reports', 'stats'));
+        } elseif (view()->exists('my-reports')) {
+            return view('my-reports', compact('reports', 'stats'));
+        } elseif (view()->exists('laporan.saya')) {
+            return view('laporan.saya', compact('reports', 'stats'));
+        }
+        // Default jika disimpan sebagai resources/views/my-reports.blade.php
+        return view('my-reports', compact('reports', 'stats'));
     }
+    
 
         // ==========================================================
     // MODUL LAPOR BARANG HILANG & DITEMUKAN
@@ -273,8 +308,8 @@ class ReportController extends Controller
             'event_date'      => 'required|date',
             'event_time'      => 'nullable|string',
             'address'         => 'required|string|max:255',
-            'latitude'        => 'nullable|numeric',
-            'longitude'       => 'nullable|numeric',
+            'latitude'        => 'required|numeric|between:-90,90',
+            'longitude'       => 'required|numeric|between:-180,180',
             'reporter_phone'  => 'required|string|max:25',
             'photo'           => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120', // Maks 5MB
         ], [
@@ -284,6 +319,8 @@ class ReportController extends Controller
             'event_date.required'     => 'Tanggal kejadian wajib diisi.',
             'address.required'        => 'Alamat patokan lokasi wajib diisi.',
             'reporter_phone.required' => 'Nomor WhatsApp aktif wajib diisi.',
+            'latitude.required'       => 'Tentukan titik lokasi pada peta (cari nama tempat, gunakan lokasi saat ini, atau klik peta).',
+            'longitude.required'      => 'Tentukan titik lokasi pada peta.',
         ]);
 
         $photoPath = null;
@@ -301,8 +338,8 @@ class ReportController extends Controller
             'event_date'     => $validated['event_date'],
             'event_time'     => $validated['event_time'] ?? null,
             'address'        => $validated['address'],
-            'latitude'       => $request->latitude ?? -6.175392,
-            'longitude'      => $request->longitude ?? 106.827153,
+            'latitude'       => $validated['latitude'],
+            'longitude'      => $validated['longitude'],
             'photo'          => $photoPath,
             'reporter_name'  => Auth::user()->name ?? 'Warga',
             'reporter_phone' => $validated['reporter_phone'],

@@ -145,13 +145,14 @@
                                 <div class="rounded-2xl border border-blue-50 bg-[#f0f4ff]/50 p-4">{{ $claim->pickup_time }}</div>
                             </div>
 
-                            @if (app()->environment('local'))
+                            @if (app()->environment('local') || config('app.demo_mode'))
                                 <a href="{{ route('barang.klaim.konfirmasi', $claim) }}" class="mt-4 inline-block rounded-xl border border-dashed border-blue-300 bg-white px-3 py-1.5 text-[11px] font-bold text-blue-600 hover:bg-blue-50">
                                     Simulasi scan QR (hanya mode local)
                                 </a>
                             @endif
                         </div>
                     @endif
+                    @include('barang.partials.qr-reset', ['claim' => $claim])
 
                     {{-- STEP 6: SELESAI --}}
                     @if ($step >= 6 && !$claim->rejected_at)

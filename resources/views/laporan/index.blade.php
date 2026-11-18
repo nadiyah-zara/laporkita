@@ -43,7 +43,7 @@
                 {{-- Hero Banner Image --}}
                 <div class="relative lg:col-span-6">
                     <div class="overflow-hidden rounded-3xl shadow-xl">
-                        <img src="{{ asset('images/rusak.png') }}"
+                        <img src="{{ asset('images/jalan rusak.png') }}"
                             onerror="this.src='https://images.unsplash.com/photo-1541888946425-d0fbb186f5f8?w=1600&auto=format&fit=crop&q=80'"
                             alt="Pekerjaan Infrastruktur LaporKita"
                             class="h-full w-full object-cover object-right md:object-center opacity-90" />
