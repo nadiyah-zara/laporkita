@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow">
     <title>Login Admin - LaporKita</title>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="relative flex min-h-screen items-center justify-center bg-slate-800 bg-cover bg-center bg-no-repeat p-4"
       style="background-image: url('{{ asset('images/hero-bg.png') }}');">
