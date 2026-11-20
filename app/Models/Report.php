@@ -2,40 +2,12 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable([
-    'ticket_code',
-    'user_id',
-    'category_id',
-    'type',
-    'item_kind',
-    'title',
-    'urgency',
-    'description',
-    'photo',
-    'photos',
-    'photo_after',
-    'latitude',
-    'longitude',
-    'address',
-    'reporter_name',
-    'reporter_phone',
-    'event_date',
-    'event_time',
-    'status',
-    'progress_percentage',
-    'current_step',
-    'supervisor_name',
-    'supervisor_notes',
-    'completion_notes',
-    'admin_note',
-])]
 /**
  * @property int|null $progress_percentage
  * @property string|null $ticket_code
@@ -51,6 +23,34 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class Report extends Model
 {
+    protected $fillable = [
+        'ticket_code',
+        'user_id',
+        'category_id',
+        'type',
+        'item_kind',
+        'title',
+        'urgency',
+        'description',
+        'photo',
+        'photos',
+        'photo_after',
+        'latitude',
+        'longitude',
+        'address',
+        'reporter_name',
+        'reporter_phone',
+        'event_date',
+        'event_time',
+        'status',
+        'progress_percentage',
+        'current_step',
+        'supervisor_name',
+        'supervisor_notes',
+        'completion_notes',
+        'admin_note',
+    ];
+
     protected function casts(): array
     {
         return [
